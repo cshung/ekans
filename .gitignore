@@ -1,3 +1,4 @@
+# Default
 .DS_Store
 compiled/
 /doc/
@@ -5,3 +6,10 @@ compiled/
 *.bak
 \#*
 .\#*
+
+# Editor
+.code/
+.idea/
+
+# Executable
+*.out
