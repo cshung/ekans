@@ -3,4 +3,5 @@
 (define lp #\()
 (define rp #\))
 
-(provide lp rp)
+(provide lp
+         rp)

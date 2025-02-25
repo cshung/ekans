@@ -1,6 +1,9 @@
 default: clean build execute
 
-build:
+fmt:
+	find -type f -iname "*.rkt" | xargs raco fmt -i --indent 2 # raco pkg install fmt
+
+build: fmt
 	raco exe -o compiler.out app/main.rkt 
 
 execute:
@@ -10,7 +13,7 @@ execute:
 clean:
 	rm -f *.out
 
-test:
+test: fmt
 	raco test test/main.rkt	
 
-.PHONY: build execute clean test
+.PHONY: fmt build execute clean test
