@@ -12,6 +12,7 @@
         (cond
           [(equal? peek lp) (cons (cons 'lparen '()) (cdr input))]
           [(equal? peek rp) (cons (cons 'rparen '()) (cdr input))]
+          [(digit? peek) (cons (cons 'digit peek) (cdr input))]
           [else (cons (cons 'unknown peek) (cdr input))]))))
 
 (define (read-file filename)
