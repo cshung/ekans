@@ -12,7 +12,11 @@
         (cond
           [(equal? peek lp) (cons (cons 'lparen '()) (cdr input))]
           [(equal? peek rp) (cons (cons 'rparen '()) (cdr input))]
-          [(digit? peek) (cons (cons 'digit peek) (cdr input))]
+          [(digit? peek)
+           (let ([number-result (takeWhile input digit?)])
+             (if (null? (cdr number-result))
+                 (cons (cons 'number (list->string (car number-result))) '())
+                 (cons (cons 'unknown (list->string (car input))) '())))]
           [else (cons (cons 'unknown peek) (cdr input))]))))
 
 (define (read-file filename)
