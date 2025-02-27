@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main  
+  pull_request:
+    branches:
+      - main  
+
+jobs:
+  test:
+    runs-on: ubuntu-latest 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+
+      - name: Set up Racket
+        uses: Bogdanp/setup-racket@v1.11
+        with:
+          architecture: 'x64'
+          distribution: 'full'
+          variant: 'CS'
+          version: 'stable'  
+
+      - name: Install dependencies
+        run: raco pkg install --auto fmt
+
+      - name: Run tests
+        run: make test 
