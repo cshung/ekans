@@ -12,7 +12,7 @@
 
 (define (main)
   (compiler (vector->list (current-command-line-arguments)))
-  (displayln (lexer "Hello World"))
+  (displayln (lexer (string->list "Hello World")))
   (displayln (parser "I Go to School By Bus!")))
 
 (provide main)

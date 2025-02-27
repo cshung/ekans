@@ -1,7 +1,7 @@
 default: clean build execute
 
 fmt:
-	find -type f -iname "*.rkt" | xargs raco fmt -i --indent 2 # raco pkg install fmt
+	find . -type f -iname "*.rkt" | xargs raco fmt -i --indent 2 # raco pkg install fmt
 
 build: fmt
 	raco exe -o compiler.out app/main.rkt 
