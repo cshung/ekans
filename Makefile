@@ -10,8 +10,9 @@ build: fmt
 	raco exe -o compiler.out app/main.rkt 
 
 execute:
-	./compiler.out program/math/add.rkt
-	./compiler.out program/string/testcase_001.rkt
+	for program in $$(find ./test/data/ -type f -iname "*.rkt"); do \
+		./compiler.out $$program;                                     \
+	done
 
 clean:
 	rm -f *.out
