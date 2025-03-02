@@ -1,8 +1,8 @@
 #lang racket
 
 (require rackunit
-         "../ekans/lexer.rkt")
-(require "../common/common.rkt")
+         "../ekans/lexer.rkt"
+         "../common/common.rkt")
 
 (provide test-lexer)
 

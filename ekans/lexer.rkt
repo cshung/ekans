@@ -27,11 +27,21 @@
 (define (digits-follows? suffix)
   (or (null? suffix) (member (car suffix) '(#\space))))
 
+;
+; lexer
+;
+; input  - a list of characters representing the text to be tokenized
+; output - a pair of a token and the rest of the text to be tokenized as a list of characters
+;          a token is represented as a pair of token type and the token value
+;
+; error  - in case the stream is invalid, it will be terminated right away with a token of type unknown
+;
 (define (lexer input)
   (if (null? input)
       (cons (cons 'eof '()) '())
       (let ([peek (car input)])
         (cond
+          [(equal? peek #\space) (lexer (cdr input))]
           [(equal? peek lp) (cons (cons 'lparen '()) (cdr input))]
           [(equal? peek rp) (cons (cons 'rparen '()) (cdr input))]
           [(digit? peek)
