@@ -1,3 +1,6 @@
+# Copyright (c) 2025 Good Night, Good Morning and contributors (see Contributors.md)
+# Licensed under the MIT License. See the LICENSE file in the project root for details.
+
 name: CI
 
 on:
@@ -28,4 +31,4 @@ jobs:
         run: raco pkg install --auto fmt
 
       - name: Run tests
-        run: make test 
+        run: make test-compiler

@@ -6,7 +6,7 @@
 (provide parse-statement)
 (provide parse-statements)
 
-(require "../ekans/lexer.rkt")
+(require "lexer.rkt")
 
 ;
 ; Grammar

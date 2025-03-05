@@ -5,18 +5,38 @@
 
 (require "../ekans/lexer.rkt")
 (require "../ekans/parser.rkt")
+(require "../ekans/codegen.rkt")
 
-(define (compiler args)
-  (displayln "Arguments received:")
+(define (log-info-input args)
+  (displayln "[log] Arguments received:")
   (displayln args)
   (if (null? args)
-      (displayln "Please provide a file name.")
+      (displayln "[log] Please provide a file name.")
       (let ([filename (car args)]) (displayln (read-file filename)))))
 
+(define (compiler filename)
+  ; lexer
+  ; (displayln (lexer (string->list "Hello World")))
+  ;
+  ; parser
+  ; (displayln (parse-statements (string->list "I Go to School By Bus!"))))
+  ;
+  ; code generation
+  (define input (read-file filename))
+  (define parsed-program (parse-statements input))
+  (if (eq? parsed-program 'error)
+      (displayln "Error: Unable to parse the input.")
+      (let ([generated-code (generate-code parsed-program)])
+        (displayln generated-code)
+        (displayln (generate-main-function parsed-program))
+        (generate-file "build/main.c" (generate-main-function parsed-program)))))
+
 (define (main)
-  (compiler (vector->list (current-command-line-arguments)))
-  (displayln (lexer (string->list "Hello World")))
-  (displayln (parse-statements (string->list "I Go to School By Bus!"))))
+  (define args (vector->list (current-command-line-arguments)))
+  (log-info-input args)
+  (if (null? args)
+      (displayln "Error: No input file provided.")
+      (compiler (car args))))
 
 (provide main)
 

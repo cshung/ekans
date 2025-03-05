@@ -5,6 +5,12 @@
 
 (define lp #\()
 (define rp #\))
+(define empty-string "")
+(define prologue "int main(void) {\n")
+(define epilogue "  return 0;\n}")
 
 (provide lp
-         rp)
+         rp
+         empty-string
+         prologue
+         epilogue)
