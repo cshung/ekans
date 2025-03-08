@@ -28,7 +28,52 @@
         (digits-to-number (cdr lst) (+ (* acc 10) (- digit 48))))))
 
 (define (digits-follows? suffix)
-  (or (null? suffix) (member (car suffix) '(#\space))))
+  (or (null? suffix) (member (car suffix) '(#\space #\newline))))
+
+;
+; match
+;
+; input  - a list of characters representing the text to be tokenized
+; prefix - a list of characters representing the prefix to be matched
+; output - a list of 1 element where the first element is the remaining input
+;          otherwise, it returns an empty list
+;
+(define (match input
+          prefix)
+  (if (null? prefix)
+      (list input)
+      (if (null? input)
+          '()
+          (if (equal? (car input) (car prefix))
+              (match (cdr input)
+                [cdr prefix])
+              '()))))
+
+;
+; lexer-keywords
+;
+; input    - a list of characters representing the text to be tokenized
+; keywords - a list of (keyword, token-type) pairs representing the keywords to be matched
+; output   - a pair of a token and the rest of the text to be tokenized as a list of characters
+;            a token is represented as a pair of token type and the token value, which is '() in case of a keyword
+;            or '() in case of a keyword not found
+;
+(define (lexer-keywords input keywords)
+  (if (null? keywords)
+      '()
+      (let* ([keyword-pair (car keywords)]
+             [keyword (car keyword-pair)]
+             [token (cdr keyword-pair)]
+             [match-result (match input
+                             keyword)])
+        (if (and (not (null? match-result)) (digits-follows? (car match-result)))
+            (cons token (car match-result))
+            (lexer-keywords input (cdr keywords))))))
+
+(define keywords
+  (list (cons (string->list "#t") (cons 'bool #t))
+        (cons (string->list "#f") (cons 'bool #f))
+        (cons (string->list "if") (cons 'if '()))))
 
 ;
 ; lexer
@@ -42,17 +87,22 @@
 (define (lexer input)
   (if (null? input)
       (cons (cons 'eof '()) '())
-      (let ([peek (car input)])
-        (cond
-          [(equal? peek #\space) (lexer (cdr input))]
-          [(equal? peek lp) (cons (cons 'lparen '()) (cdr input))]
-          [(equal? peek rp) (cons (cons 'rparen '()) (cdr input))]
-          [(digit? peek)
-           (let ([number-result (take-while input digit?)])
-             (if (digits-follows? (cdr number-result))
-                 (cons (cons 'number (digits-to-number (car number-result) 0)) (cdr number-result))
-                 (cons (cons 'unknown '()) '())))]
-          [else (cons (cons 'unknown '()) '())]))))
+      (let ([lexer-keywords-result (lexer-keywords input keywords)])
+        (if (not (null? lexer-keywords-result))
+            lexer-keywords-result
+            (let ([peek (car input)])
+              (cond
+                [(equal? peek #\space) (lexer (cdr input))]
+                [(equal? peek #\newline) (lexer (cdr input))]
+                [(equal? peek lp) (cons (cons 'lparen '()) (cdr input))]
+                [(equal? peek rp) (cons (cons 'rparen '()) (cdr input))]
+                [(digit? peek)
+                 (let ([number-result (take-while input digit?)])
+                   (if (digits-follows? (cdr number-result))
+                       (cons (cons 'number (digits-to-number (car number-result) 0))
+                             (cdr number-result))
+                       (cons (cons 'unknown '()) '())))]
+                [else (cons (cons 'unknown '()) '())]))))))
 
 (define (read-file filename)
   (call-with-input-file filename

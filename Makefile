@@ -15,7 +15,7 @@ execute:
 	# for program in $$(find ./test/data/ -type f -iname "*.rkt"); do \
 	#	./compiler.out $$program;                                     \
 	# done
-	./build/compiler.out test/data/int/testcase_001.rkt
+	./build/compiler.out test/data/bool/testcase_001.rkt
 
 clean:
 	rm -rf *.out *.c build/

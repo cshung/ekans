@@ -24,6 +24,11 @@
  (test-case "Test One Number Statement"
    (check-equal? (parse-statements (string->list "123"))
                  (cons (list (cons 'number-statement 123)) '())))
- (test-case "Test Two Number Statement"
+ (test-case "Test Two Numbers Statement"
    (check-equal? (parse-statements (string->list "123 234"))
-                 (cons (list (cons 'number-statement 123) (cons 'number-statement 234)) '()))))
+                 (cons (list (cons 'number-statement 123) (cons 'number-statement 234)) '())))
+ (test-case "Test One Bool Statement"
+   (check-equal? (parse-statements (string->list "#t")) (cons (list (cons 'bool-statement #t)) '())))
+ (test-case "Test Two Bools Statement"
+   (check-equal? (parse-statements (string->list "#t #f"))
+                 (cons (list (cons 'bool-statement #t) (cons 'bool-statement #f)) '()))))

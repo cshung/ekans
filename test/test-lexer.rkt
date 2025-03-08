@@ -24,4 +24,8 @@
                      (check-equal? (lexer (string->list "357 "))
                                    (cons (cons 'number 357) '(#\space))))
                    (test-case "Test digit following an invalid suffix case"
-                     (check-equal? (lexer (string->list "357a z")) (cons (cons 'unknown '()) '()))))
+                     (check-equal? (lexer (string->list "357a z")) (cons (cons 'unknown '()) '())))
+                   (test-case "Test false following a valid suffix case"
+                     (check-equal? (lexer (string->list "#f ")) (cons (cons 'bool #f) '(#\space))))
+                   (test-case "Test false following a invalid suffix case"
+                     (check-equal? (lexer (string->list "#fa ")) (cons (cons 'unknown '()) '()))))
