@@ -6,8 +6,8 @@
 (define lp #\()
 (define rp #\))
 (define empty-string "")
-(define prologue "int main(void) {\n")
-(define epilogue "  return 0;\n}")
+(define prologue "#include <stdio.h>\n\nint main(void) {\n")
+(define epilogue "  return 0;\n}\n")
 
 (provide lp
          rp

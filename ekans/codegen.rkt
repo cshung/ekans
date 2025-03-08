@@ -10,7 +10,7 @@
 (provide generate-file)
 
 (define (generate-number-statement number-statement)
-  (let ([number-value (cdr number-statement)]) (format "int num = ~a;" number-value)))
+  (let ([number-value (cdr number-statement)]) (format "printf(\"%d\\n\",~a);" number-value)))
 
 (define (generate-statement statement)
   (displayln (format "[log] generate-statement: statement = ~a" statement))

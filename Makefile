@@ -21,13 +21,13 @@ clean:
 	rm -rf *.out *.c build/
 
 compiled-c-code:
+	set -e
 	clang -o build/app.out build/main.c
-	file build/app.out
+	./build/app.out > ./main.actual
+	diff ./main.expect ./main.actual
+	diff -q ./main.expect ./main.actual >/dev/null
 
-test-compiler: fmt
-	raco test test/main.rkt	
-
-test-codegen: fmt
-	raco test test/test-codegen.rkt
+test: fmt
+	raco test test/main.rkt
 
 .PHONY: fmt build execute clean test

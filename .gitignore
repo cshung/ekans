@@ -19,3 +19,6 @@ compiled/
 
 # Compiled
 build/
+
+# Test Outputs
+*.actual
