@@ -20,12 +20,19 @@ execute:
 clean:
 	rm -rf *.out *.c build/
 
-test-compiled-c-code: build execute
+test-compiled-c-code: build
 	set -e
-	clang -o build/app.out build/main.c
-	./build/app.out > ./build/bool.actual
-	diff ./test/data/bool.expect ./build/bool.actual
-	diff -q ./test/data/bool.expect ./build/bool.actual >/dev/null
+	for file in $$(find test/data -name '*.rkt' | sed 's/\.rkt$$//'); do \
+		if [ -f "$$file.expect" ]; then                                    \
+			rm -f ./build/output.actual;                                     \
+			./build/compiler.out "$$file.rkt";                               \
+			clang -o build/app.out build/main.c;                             \
+			./build/app.out > ./build/output.actual;                         \
+			diff "$$file.expect" ./build/output.actual;                      \
+			diff -q "$$file.expect" ./build/output.actual >/dev/null;        \
+		fi;                                                                \
+	done
+
 
 unit-tests: fmt
 	raco test test/main.rkt
