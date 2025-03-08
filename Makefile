@@ -15,7 +15,7 @@ execute:
 	# for program in $$(find ./test/data/ -type f -iname "*.rkt"); do \
 	#	./compiler.out $$program;                                       \
 	# done
-	./build/compiler.out test/input/bool/testcase_001.rkt
+	./build/compiler.out test/data/bool.rkt
 
 clean:
 	rm -rf *.out *.c build/
@@ -23,9 +23,9 @@ clean:
 test-compiled-c-code: build execute
 	set -e
 	clang -o build/app.out build/main.c
-	./build/app.out > ./build/testcase_001.actual
-	diff ./test/expect/bool/testcase_001.rkt ./build/testcase_001.actual
-	diff -q ./test/expect/bool/testcase_001.rkt ./build/testcase_001.actual >/dev/null
+	./build/app.out > ./build/bool.actual
+	diff ./test/data/bool.expect ./build/bool.actual
+	diff -q ./test/data/bool.expect ./build/bool.actual >/dev/null
 
 unit-tests: fmt
 	raco test test/main.rkt
