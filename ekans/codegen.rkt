@@ -9,7 +9,8 @@
 (provide generate-main-function)
 (provide generate-file)
 
-(define prologue "#include <stdio.h>\n\nint main(void) {\n")
+(define prologue
+  "#include<stdio.h>\n\nvoid initialize_ekan();\n\nint main(void) {\n  initialize_ekan();\n")
 (define epilogue "  return 0;\n}\n")
 
 (define (generate-number-statement number-statement)
