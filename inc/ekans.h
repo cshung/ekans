@@ -27,3 +27,6 @@ void collect();
 void initialize_ekans();
 
 void finalize_ekans();
+
+extern ekans_value head;
+extern ekans_value tail;

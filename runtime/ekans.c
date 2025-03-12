@@ -7,6 +7,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+const int mark_bit = 65536;
+
+stack_slot* g_stack_slots = NULL;
+
 ekans_value head;
 ekans_value tail;
 

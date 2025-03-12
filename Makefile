@@ -38,6 +38,11 @@ test-compiled-c-code: build
 		fi;                                                                \
 	done
 
+test-runtime: clean fmt
+	mkdir -p build
+	clang -g -I ./inc -c -o build/ekans.o runtime/ekans.c
+	clang -g -I ./inc -o build/test-runtime.out test/runtime/main.c build/ekans.o 
+	./build/test-runtime.out
 
 unit-tests: fmt
 	raco test test/main.rkt
