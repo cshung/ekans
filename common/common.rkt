@@ -7,6 +7,13 @@
 (define rp #\))
 (define empty-string "")
 
+(define (list-start? token)
+  (and (not (null? token))
+       (equal? (car token) #\')
+       (not (null? (cdr token)))
+       (equal? (car (cdr token)) lp)))
+
 (provide lp
          rp
-         empty-string)
+         empty-string
+         list-start?)
