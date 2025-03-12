@@ -28,7 +28,7 @@
         (digits-to-number (cdr lst) (+ (* acc 10) (- digit 48))))))
 
 (define (digits-follows? suffix)
-  (or (null? suffix) (member (car suffix) '(#\space #\newline))))
+  (or (null? suffix) (member (car suffix) '(#\space #\newline #\( #\)))))
 
 ;
 ; match

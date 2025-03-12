@@ -31,4 +31,19 @@
    (check-equal? (parse-statements (string->list "#t")) (cons (list (cons 'bool-statement #t)) '())))
  (test-case "Test Two Bools Statement"
    (check-equal? (parse-statements (string->list "#t #f"))
-                 (cons (list (cons 'bool-statement #t) (cons 'bool-statement #f)) '()))))
+                 (cons (list (cons 'bool-statement #t) (cons 'bool-statement #f)) '())))
+ (test-case "Test Empty List"
+   (check-equal? (parse-statements (string->list "()")) (cons (list (cons 'list-statement '())) '())))
+ (test-case "Test List with One Number"
+   (check-equal? (parse-statements (string->list "(123)"))
+                 (cons (list (cons 'list-statement (list (cons 'number-statement 123)))) '())))
+ (test-case "Test List with Two Numbers"
+   (check-equal? (parse-statements (string->list "(123 234)"))
+                 (cons (list (cons 'list-statement
+                                   (list (cons 'number-statement 123) (cons 'number-statement 234))))
+                       '())))
+ (test-case "Test List with One Number One Bool"
+   (check-equal? (parse-statements (string->list "(123 #t)"))
+                 (cons (list (cons 'list-statement
+                                   (list (cons 'number-statement 123) (cons 'bool-statement #t))))
+                       '()))))
