@@ -5,8 +5,6 @@
 
 #include <ekans.h>
 
-extern const int mark_bit;
-
 typedef enum {
   number,
   boolean

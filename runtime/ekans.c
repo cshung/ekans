@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-const int mark_bit = 65536;
+#define EKANS_MARK_BITS 65536
 
 stack_slot* g_stack_slots = NULL;
 
@@ -138,13 +138,13 @@ void mark_recursively(ekans_value* obj) {
 }
 
 void mark_this(ekans_value* obj) {
-  obj->type |= mark_bit;
+  obj->type |= EKANS_MARK_BITS;
 }
 
 void reset_this(ekans_value* obj) {
-  obj->type &= ~mark_bit;
+  obj->type &= ~EKANS_MARK_BITS;
 }
 
 bool marked(ekans_value* obj) {
-  return (obj->type & mark_bit) != 0;
+  return (obj->type & EKANS_MARK_BITS) != 0;
 }
