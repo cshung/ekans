@@ -10,9 +10,6 @@
 (provide test-lexer)
 
 (define-test-suite test-lexer
-                   (test-case "Test list start"
-                     (check-equal? (lexer (string->list "'(1 2 3)"))
-                                   (cons (cons 'list-start '()) (string->list "1 2 3)"))))
                    (test-case "Test EOF"
                      (check-equal? (lexer (string->list "")) (cons (cons 'eof '()) '())))
                    (test-case "Test lparen"
@@ -31,4 +28,7 @@
                    (test-case "Test false following a valid suffix case"
                      (check-equal? (lexer (string->list "#f ")) (cons (cons 'bool #f) '(#\space))))
                    (test-case "Test false following a invalid suffix case"
-                     (check-equal? (lexer (string->list "#fa ")) (cons (cons 'unknown '()) '()))))
+                     (check-equal? (lexer (string->list "#fa ")) (cons (cons 'unknown '()) '())))
+                   (test-case "Test quoted list"
+                     (check-equal? (lexer (string->list "'(1 2 3)"))
+                                   (cons (cons 'quote '()) (string->list "(1 2 3)")))))

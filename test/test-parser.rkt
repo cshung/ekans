@@ -46,4 +46,17 @@
    (check-equal? (parse-statements (string->list "(123 #t)"))
                  (cons (list (cons 'list-statement
                                    (list (cons 'number-statement 123) (cons 'bool-statement #t))))
+                       '())))
+ (test-case "Test Two Lists"
+   (check-equal? (parse-statements (string->list "(123) (234)"))
+                 (cons (list (cons 'list-statement (list (cons 'number-statement 123)))
+                             (cons 'list-statement (list (cons 'number-statement 234))))
+                       '())))
+ (test-case "Test Quoted List"
+   (check-equal? (parse-statements (string->list "'(123 234)"))
+                 (cons (list ; The list of statements
+                        (cons 'quote-statement
+                              (cons 'list-statement ; The statement type
+                                    (list (cons 'number-statement 123)
+                                          (cons 'number-statement 234)))))
                        '()))))

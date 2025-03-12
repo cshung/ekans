@@ -67,7 +67,29 @@
       [(eq? first-token-type 'number) (cons (cons 'number-statement (cdr first-token)) first-rest)]
       [(eq? first-token-type 'bool) (cons (cons 'bool-statement (cdr first-token)) first-rest)]
       [(eq? first-token-type 'lparen) (parse-list-statement input)]
+      [(eq? first-token-type 'quote) (parse-quote-statement input)]
       [else 'error])))
+
+;
+; parse-quote-statement
+;
+; input  - the text to be parsed
+; output - a quote statement and the rest of the text to be parsed
+;
+; error  - in case the token with the rest of the text cannot be interpreted
+;          as a statement, 'error will be returned
+;
+(define (parse-quote-statement input)
+  (let* ([first-lex (lexer input)]
+         [first-token (car first-lex)]
+         [first-rest (cdr first-lex)]
+         [first-token-type (car first-token)])
+    (if (eq? first-token-type 'quote)
+        (let* ([parse1 (parse-statement first-rest)])
+          (if (eq? parse1 'error)
+              'error
+              (cons (cons 'quote-statement (car parse1)) (cdr parse1))))
+        'error)))
 
 ;
 ; parse-list-statement
