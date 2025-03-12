@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Good Night, Good Morning and contributors (see Contributors.md)
+// Licensed under the MIT License. See the LICENSE file in the project root for details.
+
 #include <assert.h>
 #include <ekans-internals.h>
 #include <ekans.h>
@@ -14,58 +17,60 @@ void initialize_ekans() {
   tail.next = NULL;
 }
 
-ekans_value *create_number_value(int v) {
-  ekans_value *result = malloc(sizeof(ekans_value));
+ekans_value* create_number_value(int v) {
+  ekans_value* result = malloc(sizeof(ekans_value));
   // printf("Malloc %p\n", result);
   append(result);
-  result->type = number;
+  result->type    = number;
   result->value.n = v;
   return result;
 }
 
-ekans_value *create_boolean_value(bool v) {
-  ekans_value *result = malloc(sizeof(ekans_value));
+ekans_value* create_boolean_value(bool v) {
+  ekans_value* result = malloc(sizeof(ekans_value));
   // printf("Malloc %p\n", result);
   append(result);
-  result->type = boolean;
+  result->type    = boolean;
   result->value.b = v;
   return result;
 }
 
-void print_ekans_value(ekans_value *v) {
+void print_ekans_value(ekans_value* v) {
   switch (v->type) {
-  case number:
-    printf("%d\n", v->value.n);
-    break;
-  case boolean:
-    switch (v->value.b) {
-    case true:
-      printf("#t\n");
-      break;
-    case false:
-      printf("#f\n");
-      break;
-    default:
-      assert(!"print_ekans_value: unknown boolean value");
-    }
-    break;
-  default:
-    assert(!"print_ekans_value: unknown type");
+    case number: {
+      printf("%d\n", v->value.n);
+    } break;
+    case boolean: {
+      switch (v->value.b) {
+        case true: {
+          printf("#t\n");
+        } break;
+        case false: {
+          printf("#f\n");
+        } break;
+        default: {
+          assert(!"print_ekans_value: unknown boolean value");
+        } break;
+      }
+    } break;
+    default: {
+      assert(!"print_ekans_value: unknown type");
+    } break;
   }
 }
 
-void push_stack_slot(ekans_value **slot) {
-  stack_slot *top = malloc(sizeof(stack_slot));
+void push_stack_slot(ekans_value** slot) {
+  stack_slot* top = malloc(sizeof(stack_slot));
   // printf("malloc %p\n", top);
-  top->slot = slot;
-  top->next = g_stack_slots;
+  top->slot     = slot;
+  top->next     = g_stack_slots;
   g_stack_slots = top;
 }
 
 void pop_stack_slot(int count) {
   for (int i = 0; i < count; i++) {
-    stack_slot *top = g_stack_slots;
-    g_stack_slots = top->next;
+    stack_slot* top = g_stack_slots;
+    g_stack_slots   = top->next;
     // printf("free %p\n", top);
     free(top);
   }
@@ -77,9 +82,9 @@ void collect() {
 }
 
 void mark() {
-  stack_slot *cur = g_stack_slots;
+  stack_slot* cur = g_stack_slots;
   while (cur != NULL) {
-    ekans_value *obj = *(cur->slot);
+    ekans_value* obj = *(cur->slot);
     if (obj) {
       mark_recursively(obj);
     }
@@ -88,11 +93,11 @@ void mark() {
 }
 
 void sweep() {
-  ekans_value *cur = head.next;
+  ekans_value* cur = head.next;
   // int freed = 0;
   // int reset = 0;
   while (cur != &tail) {
-    ekans_value *next = cur->next;
+    ekans_value* next = cur->next;
     if (marked(cur)) {
       // reset += 1;
       reset_this(cur);
@@ -109,16 +114,18 @@ void sweep() {
   // freed, reset);
 }
 
-void finalize_ekans() { collect(); }
+void finalize_ekans() {
+  collect();
+}
 
-void append(ekans_value *new_value) {
-  new_value->prev = tail.prev;
-  new_value->next = &tail;
+void append(ekans_value* new_value) {
+  new_value->prev       = tail.prev;
+  new_value->next       = &tail;
   new_value->prev->next = new_value;
   new_value->next->prev = new_value;
 }
 
-void mark_recursively(ekans_value *obj) {
+void mark_recursively(ekans_value* obj) {
   if (!marked(obj)) {
     mark_this(obj);
     // TODO, recursively mark referenced values when we start producing
@@ -126,8 +133,14 @@ void mark_recursively(ekans_value *obj) {
   }
 }
 
-void mark_this(ekans_value *obj) { obj->type |= mark_bit; }
+void mark_this(ekans_value* obj) {
+  obj->type |= mark_bit;
+}
 
-void reset_this(ekans_value *obj) { obj->type &= ~mark_bit; }
+void reset_this(ekans_value* obj) {
+  obj->type &= ~mark_bit;
+}
 
-bool marked(ekans_value *obj) { return (obj->type & mark_bit) != 0; }
+bool marked(ekans_value* obj) {
+  return (obj->type & mark_bit) != 0;
+}
