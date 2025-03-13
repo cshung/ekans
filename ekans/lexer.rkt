@@ -30,6 +30,11 @@
 (define (digits-follows? suffix)
   (or (null? suffix) (member (car suffix) '(#\space #\newline #\( #\)))))
 
+(define (skip-comment input)
+  (if (or (null? input) (equal? (car input) #\newline))
+      input
+      (skip-comment (cdr input))))
+
 ;
 ; match
 ;
@@ -92,6 +97,7 @@
             lexer-keywords-result
             (let ([peek (car input)])
               (cond
+                [(equal? peek #\;) (lexer (skip-comment (cdr input)))]
                 [(equal? peek #\space) (lexer (cdr input))]
                 [(equal? peek #\newline) (lexer (cdr input))]
                 [(equal? peek lp) (cons (cons 'lparen '()) (cdr input))]

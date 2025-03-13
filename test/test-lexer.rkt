@@ -10,6 +10,14 @@
 (provide test-lexer)
 
 (define-test-suite test-lexer
+                   (test-case "Test multiple line comments"
+                     (check-equal? (lexer (string->list ;
+                                           "; 床前明月光，\n;疑是地上霜。\n;舉頭望明月，\n;下一句係乜嘢\n1234567"))
+                                   (cons (cons 'number 1234567) '())))
+                   (test-case "Test single line comments"
+                     (check-equal? (lexer (string->list ;
+                                           "; London Bridge Is Falling Down\n;1234567\n#f"))
+                                   (cons (cons 'bool #f) '())))
                    (test-case "Test EOF"
                      (check-equal? (lexer (string->list "")) (cons (cons 'eof '()) '())))
                    (test-case "Test lparen"
