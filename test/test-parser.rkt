@@ -10,15 +10,11 @@
 
 (define-test-suite
  test-parser
- (test-case "Test Error Statement"
-   (check-equal? (parse-statement (string->list "x")) 'error))
  (test-case "Test Number Statement"
    (check-equal? (parse-statement (string->list "123")) (cons (cons 'number-statement 123) '())))
  (test-case "Test Number Statement with trailing characters"
    (check-equal? (parse-statement (string->list "123 "))
                  (cons (cons 'number-statement 123) '(#\space))))
- (test-case "Test Error Statements"
-   (check-equal? (parse-statements (string->list "x")) 'error))
  (test-case "Test Empty Statements"
    (check-equal? (parse-statements (string->list "")) (cons '() '())))
  (test-case "Test One Number Statement"
@@ -59,4 +55,13 @@
                               (cons 'list-statement ; The statement type
                                     (list (cons 'number-statement 123)
                                           (cons 'number-statement 234)))))
+                       '())))
+ (test-case "Test Symbol"
+   (check-equal? (parse-statements (string->list "foo"))
+                 (cons (list (cons 'symbol-statement "foo")) '())))
+ (test-case "Test nested list"
+   (check-equal? (parse-statements (string->list "(123 (234))"))
+                 (cons (list (cons 'list-statement
+                                   (list (cons 'number-statement 123)
+                                         (cons 'list-statement (list (cons 'number-statement 234))))))
                        '()))))

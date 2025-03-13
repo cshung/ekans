@@ -16,7 +16,7 @@
 ;
 ; prog = statements
 ; statements = epsilon | statement statements
-; statement = number | bool | list
+; statement = number | bool | list | symbol | quote statement
 ;
 
 ;
@@ -66,6 +66,7 @@
     (cond
       [(eq? first-token-type 'number) (cons (cons 'number-statement (cdr first-token)) first-rest)]
       [(eq? first-token-type 'bool) (cons (cons 'bool-statement (cdr first-token)) first-rest)]
+      [(eq? first-token-type 'symbol) (cons (cons 'symbol-statement (cdr first-token)) first-rest)]
       [(eq? first-token-type 'lparen) (parse-list-statement input)]
       [(eq? first-token-type 'quote) (parse-quote-statement input)]
       [else 'error])))

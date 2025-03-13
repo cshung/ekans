@@ -27,7 +27,7 @@
       (let ([digit (char->integer (car lst))])
         (digits-to-number (cdr lst) (+ (* acc 10) (- digit 48))))))
 
-(define (digits-follows? suffix)
+(define (token-end? suffix)
   (or (null? suffix) (member (car suffix) '(#\space #\newline #\( #\)))))
 
 (define (skip-comment input)
@@ -71,7 +71,7 @@
              [token (cdr keyword-pair)]
              [match-result (match input
                              keyword)])
-        (if (and (not (null? match-result)) (digits-follows? (car match-result)))
+        (if (and (not (null? match-result)) (token-end? (car match-result)))
             (cons token (car match-result))
             (lexer-keywords input (cdr keywords))))))
 
@@ -105,11 +105,16 @@
                 [(equal? peek #\') (cons (cons 'quote '()) (cdr input))]
                 [(digit? peek)
                  (let ([number-result (take-while input digit?)])
-                   (if (digits-follows? (cdr number-result))
+                   (if (token-end? (cdr number-result))
                        (cons (cons 'number (digits-to-number (car number-result) 0))
                              (cdr number-result))
                        (cons (cons 'unknown '()) '())))]
-                [else (cons (cons 'unknown '()) '())]))))))
+                [else
+                 (let* ([symbol-result (take-while input (lambda (c) (not (token-end? (list c)))))]
+                        [symbol (car symbol-result)]
+                        [symbol-value (list->string symbol)]
+                        [tail (cdr symbol-result)])
+                   (cons (cons 'symbol symbol-value) tail))]))))))
 
 (define (read-file filename)
   (call-with-input-file filename
