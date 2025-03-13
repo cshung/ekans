@@ -1,8 +1,8 @@
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <ekans-internals.h>
 #include <ekans.h>
-#include <environment.h>
 
 void test_initialize_ekans() {
   initialize_ekans();
@@ -18,7 +18,7 @@ void test_create_number_value() {
   initialize_ekans();
   {
     ekans_value* const v = create_number_value(20250312);
-    assert(v->type == number);
+    assert(is(v, number));
     assert(v->value.n == 20250312);
     assert(head.next == v);
     assert(v->prev == &head);
@@ -32,7 +32,7 @@ void test_create_boolean_value() {
   initialize_ekans();
   {
     ekans_value* const v = create_boolean_value(true);
-    assert(v->type == boolean);
+    assert(is(v, boolean));
     assert(v->value.b == true);
     assert(head.next == v);
     assert(v->prev == &head);
@@ -42,103 +42,41 @@ void test_create_boolean_value() {
   printf("[%s] passed\n", __FUNCTION__);
 }
 
-void test_environment(void) {
-  ekans_environment* global_environment = create_environment(NULL, 1);
-  if (global_environment == NULL) {
-    printf("Error: Failed to create global environment\n");
-    return;
-  }
+void test_addition(void) {
+  initialize_ekans();
 
-  ekans_closure* plus_closure = malloc(sizeof(ekans_closure));
-  if (plus_closure == NULL) {
-    printf("Error: Failed to create ekans closure\n");
-    return;
-  }
-  plus_closure->closure           = global_environment;
-  plus_closure->function          = plus;
-  global_environment->bindings[0] = (ekans_value*)plus_closure;
+  ekans_value* global_environment = NULL;
+  ekans_value* plus_closure       = NULL;
+  ekans_value* local_environment  = NULL;
+  ekans_value* plus_function      = NULL;
+  ekans_value* result             = NULL;
 
-  {
-    int p = 1, q = 2;
+  push_stack_slot(&global_environment);
+  push_stack_slot(&plus_closure);
+  push_stack_slot(&local_environment);
+  push_stack_slot(&plus_function);
+  push_stack_slot(&result);
 
-    ekans_environment* local_environment = create_environment(global_environment, 2);
-    set_environment(local_environment, 0, create_number_value(p));
-    set_environment(local_environment, 1, create_number_value(q));
+  global_environment = create_environment(NULL, 1);
+  plus_closure       = create_closure(global_environment, plus);
+  set_environment(global_environment, 0, plus_closure);
 
-    ekans_value* plus_function = get_environment(global_environment, 0, 0);
-    if (plus_function == NULL) {
-      printf("Error: Failed to get plus_function\n");
-      return;
-    }
+  int p = 1, q = 2;
 
-    ekans_value* result = NULL;
-    int          status = plus_closure->function(local_environment, &result);
-    if (status == 0) {
-      printf("%-4d + %-4d = ", p, q);
-      print_ekans_value(result);
-    } else {
-      printf("Error: Failed to execute function\n");
-    }
+  local_environment = create_environment(global_environment, 2);
+  assert(local_environment);
+  set_environment(local_environment, 0, create_number_value(p));
+  set_environment(local_environment, 1, create_number_value(q));
+  plus_function = get_environment(global_environment, 0, 0);
+  assert(plus_function);
 
-    free(local_environment->bindings);
-    free(local_environment);
-  }
+  result = function_of(plus_closure)(local_environment);
+  collect(); // we should be able to put the collect call between every line, and it should still be correct
+  assert(result->value.n == 3);
 
-  {
-    int p = 12, q = 23;
-
-    ekans_environment* local_environment = create_environment(global_environment, 2);
-    set_environment(local_environment, 0, create_number_value(p));
-    set_environment(local_environment, 1, create_number_value(q));
-
-    ekans_value* plus_function = get_environment(global_environment, 0, 0);
-    if (plus_function == NULL) {
-      printf("Error: Failed to get plus_function\n");
-      return;
-    }
-
-    ekans_value* result = NULL;
-    int          status = plus_closure->function(local_environment, &result);
-    if (status == 0) {
-      printf("%-4d + %-4d = ", p, q);
-      print_ekans_value(result);
-    } else {
-      printf("Error: Failed to execute function\n");
-    }
-
-    free(local_environment->bindings);
-    free(local_environment);
-  }
-
-  {
-    int p = -123, q = -321;
-
-    ekans_environment* local_environment = create_environment(global_environment, 2);
-    set_environment(local_environment, 0, create_number_value(p));
-    set_environment(local_environment, 1, create_number_value(q));
-
-    ekans_value* plus_function = get_environment(global_environment, 0, 0);
-    if (plus_function == NULL) {
-      printf("Error: Failed to get plus_function\n");
-      return;
-    }
-
-    ekans_value* result = NULL;
-    int          status = plus_closure->function(local_environment, &result);
-    if (status == 0) {
-      printf("%-4d + %-4d = ", p, q);
-      print_ekans_value(result);
-    } else {
-      printf("Error: Failed to execute function\n");
-    }
-
-    free(local_environment->bindings);
-    free(local_environment);
-  }
-
-  free(plus_closure);
-  free(global_environment->bindings);
-  free(global_environment);
+  pop_stack_slot(5);
+  finalize_ekans();
+  printf("[%s] passed\n", __FUNCTION__);
 }
 
 int main() {
@@ -146,7 +84,7 @@ int main() {
   test_initialize_ekans();
   test_create_number_value();
   test_create_boolean_value();
-  test_environment();
+  test_addition();
   printf("=====================\n");
   printf("All tests passed!\n");
   return 0;

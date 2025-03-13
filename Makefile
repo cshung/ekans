@@ -47,8 +47,7 @@ test-compiled-c-code: build
 test-runtime: clean fmt
 	mkdir -p build
 	clang $(INCLUDES) $(CFLAGS) -c -o build/ekans.o runtime/ekans.c
-	clang $(INCLUDES) $(CFLAGS) -c -o build/environment.o runtime/environment.c
-	clang $(INCLUDES) $(CFLAGS) -o build/test-runtime.out test/runtime/main.c build/ekans.o build/environment.o
+	clang $(INCLUDES) $(CFLAGS) -o build/test-runtime.out test/runtime/main.c build/ekans.o
 	# ASAN_OPTIONS=detect_leaks=1 ./build/test-runtime.out # OSX doesn't work
 	./build/test-runtime.out
 
