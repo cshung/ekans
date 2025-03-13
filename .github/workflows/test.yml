@@ -25,4 +25,4 @@ jobs:
         run: raco pkg install --auto fmt
 
       - name: Run tests
-        run: make test-compiled-c-code && make unit-tests
+        run: make test-all
