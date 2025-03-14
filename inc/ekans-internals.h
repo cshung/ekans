@@ -13,6 +13,8 @@ typedef enum {
   boolean,
   environment,
   closure,
+  nil,
+  cons,
 } ekans_type;
 
 typedef struct ekans_environment {
@@ -26,6 +28,11 @@ typedef struct ekans_closure {
   ekans_function function;
 } ekans_closure;
 
+typedef struct ekans_cons {
+  ekans_value* head;
+  ekans_value* tail;
+} ekans_cons;
+
 struct ekans_value {
   ekans_type type;
   union {
@@ -33,6 +40,7 @@ struct ekans_value {
     bool              b;
     ekans_environment e;
     ekans_closure     c;
+    ekans_cons        l;
   } value;
   struct ekans_value* prev;
   struct ekans_value* next;
@@ -49,6 +57,8 @@ typedef struct stack_slot {
 } stack_slot;
 
 extern stack_slot* g_stack_slots;
+
+void print_ekans_value_helper(ekans_value* v);
 
 void append(ekans_value* new_value);
 

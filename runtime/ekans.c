@@ -77,6 +77,22 @@ ekans_value* create_closure(ekans_value* env, ekans_function function) {
   return result;
 }
 
+ekans_value* create_nil_value() {
+  ekans_value* result = brutal_malloc(sizeof(ekans_value));
+  result->type        = nil;
+  append(result);
+  return result;
+}
+
+ekans_value* create_cons_cell(ekans_value* head, ekans_value* tail) {
+  ekans_value* result  = brutal_malloc(sizeof(ekans_value));
+  result->type         = cons;
+  result->value.l.head = head;
+  result->value.l.tail = tail;
+  append(result);
+  return result;
+}
+
 // Garbage collection routines
 
 void push_stack_slot(ekans_value** slot) {
@@ -150,6 +166,9 @@ void mark_recursively(ekans_value* obj) {
       for (int i = 0; i < obj->value.e.binding_count; i++) {
         mark_recursively(obj->value.e.bindings[i]);
       }
+    } else if (is(obj, cons)) {
+      mark_recursively(obj->value.l.head);
+      mark_recursively(obj->value.l.tail);
     }
   }
 }
@@ -205,23 +224,51 @@ bool is(ekans_value* obj, ekans_type type) {
 }
 
 void print_ekans_value(ekans_value* v) {
+  print_ekans_value_helper(v);
+  printf("\n");
+}
+
+void print_ekans_value_helper(ekans_value* v) {
   switch (v->type) {
     case number: {
-      printf("%d\n", v->value.n);
+      printf("%d", v->value.n);
     } break;
     case boolean: {
       switch (v->value.b) {
         case true: {
-          printf("#t\n");
+          printf("#t");
         } break;
         case false: {
-          printf("#f\n");
+          printf("#f");
         } break;
         default: {
           assert(!"print_ekans_value: unknown boolean value");
         } break;
       }
     } break;
+    case cons: {
+      printf("(");
+      while (true) {
+        print_ekans_value_helper(v->value.l.head);
+        v = v->value.l.tail;
+        if (v->type == nil) {
+          printf(")");
+          break;
+        } else if (v->type == cons) {
+          printf(" ");
+        } else {
+          printf(" . ");
+          print_ekans_value_helper(v);
+          printf(")");
+          break;
+        }
+      }
+      break;
+    }
+    case nil: {
+      printf("'()");
+      break;
+    }
     default: {
       assert(!"print_ekans_value: unsupported");
     } break;

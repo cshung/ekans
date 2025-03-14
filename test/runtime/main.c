@@ -23,6 +23,7 @@ void test_create_number_value() {
     assert(head.next == v);
     assert(v->prev == &head);
     assert(v->next == &tail);
+    assert(tail.prev == v);
   }
   finalize_ekans();
   printf("[%s] passed\n", __FUNCTION__);
@@ -37,6 +38,49 @@ void test_create_boolean_value() {
     assert(head.next == v);
     assert(v->prev == &head);
     assert(v->next == &tail);
+    assert(tail.prev == v);
+  }
+  finalize_ekans();
+  printf("[%s] passed\n", __FUNCTION__);
+}
+
+void test_create_nil_value() {
+  initialize_ekans();
+  {
+    ekans_value* const v = create_nil_value();
+    assert(is(v, nil));
+    assert(head.next == v);
+    assert(v->prev == &head);
+    assert(v->next == &tail);
+    assert(tail.prev == v);
+  }
+  finalize_ekans();
+  printf("[%s] passed\n", __FUNCTION__);
+}
+
+void test_create_cons_value() {
+  initialize_ekans();
+  {
+    ekans_value* const a = create_number_value(1);
+    ekans_value* const b = create_nil_value();
+    ekans_value*       c = create_cons_cell(a, b);
+    push_stack_slot(&c);
+    collect();
+    print_ekans_value(c);
+    pop_stack_slot(1);
+    assert(is(a, number));
+    assert(is(b, nil));
+    assert(is(c, cons));
+    assert(c->value.l.head == a);
+    assert(c->value.l.tail == b);
+    assert(head.next == a);
+    assert(a->next == b);
+    assert(b->next == c);
+    assert(c->next == &tail);
+    assert(tail.prev == c);
+    assert(c->prev == b);
+    assert(b->prev == a);
+    assert(a->prev == &head);
   }
   finalize_ekans();
   printf("[%s] passed\n", __FUNCTION__);
@@ -84,6 +128,8 @@ int main() {
   test_initialize_ekans();
   test_create_number_value();
   test_create_boolean_value();
+  test_create_nil_value();
+  test_create_cons_value();
   test_addition();
   printf("=====================\n");
   printf("All tests passed!\n");

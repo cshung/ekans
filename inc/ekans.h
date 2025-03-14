@@ -29,6 +29,10 @@ ekans_value* create_environment(ekans_value* parent, const int size);
 
 ekans_value* create_closure(ekans_value* closure, ekans_function function);
 
+ekans_value* create_nil_value();
+
+ekans_value* create_cons_cell(ekans_value* head, ekans_value* tail);
+
 // accessors
 
 ekans_value* get_environment(ekans_value* env, int levels_up, int index);
