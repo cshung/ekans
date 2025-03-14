@@ -39,5 +39,13 @@
    (check-equal? (lexer (string->list "#fa ")) (cons (cons 'symbol "#fa") '(#\space))))
  (test-case "Test quoted list"
    (check-equal? (lexer (string->list "'(1 2 3)")) (cons (cons 'quote '()) (string->list "(1 2 3)"))))
- (test-case "add"
-   (check-equal? (lexer (string->list "+ 1 2")) (cons (cons 'symbol "+") (string->list " 1 2")))))
+ (test-case "Test ++("
+   (check-equal? (lexer (string->list "++(")) (cons (cons 'symbol "++") (list lp))))
+ (test-case "Test Operator Addition"
+   (check-equal? (lexer (string->list "+ 1 2")) (cons (cons 'symbol "+") (string->list " 1 2"))))
+ (test-case "Test Operator Subtraction"
+   (check-equal? (lexer (string->list "- 1 2")) (cons (cons 'symbol "-") (string->list " 1 2"))))
+ (test-case "Test Operator Multiplication"
+   (check-equal? (lexer (string->list "* 1 2")) (cons (cons 'symbol "*") (string->list " 1 2"))))
+ (test-case "Test Operator Division"
+   (check-equal? (lexer (string->list "/ 1 2")) (cons (cons 'symbol "/") (string->list " 1 2")))))
