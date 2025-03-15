@@ -49,8 +49,6 @@ struct ekans_value {
 extern ekans_value head;
 extern ekans_value tail;
 
-ekans_value* plus(ekans_value* environment);
-
 typedef struct stack_slot {
   ekans_value**      slot;
   struct stack_slot* next;

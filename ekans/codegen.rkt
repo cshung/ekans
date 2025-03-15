@@ -12,14 +12,13 @@
 (define (fetch-variable-id context)
   (car context))
 
-(define (decrement-number-of-variables context)
+(define (number-of-variables context)
   (- (fetch-variable-id context) 1))
 
 (define (increment-variable-id context)
   (cons (+ (car context) 1) (cdr context)))
 
-(define prologue "#include <ekans.h>\n\nint main(void) {\n  initialize_ekans();\n  collect();\n")
-(define epilogue "  finalize_ekans();\n  return 0;\n}\n")
+(define prologue "#include <ekans.h>\n\nvoid f1(ekans_value* env) {\n")
 
 (define (generate-print-ekans-value-statement a)
   (format "  print_ekans_value(v~a);\n" a))
@@ -79,13 +78,81 @@
          [statements-pair (generate-statements statements '(1))]
          [statements-code (car statements-pair)]
          [context (cdr statements-pair)]
-         [number-of-variables (decrement-number-of-variables context)])
+         [number-of-variables (number-of-variables context)])
     (string-append (generate-temp-declarations number-of-variables)
                    statements-code
                    (format "  pop_stack_slot(~a);\n" number-of-variables))))
 
 (define (generate-main-function parsed-program)
-  (let ([code (generate-code parsed-program)]) (string-append prologue code epilogue)))
+  (let ([code (generate-code parsed-program)]) (string-append prologue code (epilogue))))
+
+(define builtins
+  '(("+" "plus") ; plus
+    ))
+
+(define (populate-environment elements index temp-id)
+  (if (null? elements)
+      ""
+      (string-append (format "  v~a = create_closure(*pEnv, ~a);" temp-id (cadr (car elements)))
+                     "\n"
+                     (format "  set_environment(*pEnv, ~a, v~a);" index temp-id)
+                     "\n"
+                     (populate-environment (cdr elements) (+ index 1) (+ temp-id 1)))))
+
+(define (generate-build-builtins)
+  (string-append "\n"
+                 "void build_builtins(ekans_value** pEnv) {"
+                 "\n"
+                 (format "  *pEnv = create_environment(NULL, ~a);" (length builtins))
+                 "\n"
+                 (generate-temp-declarations (length builtins))
+                 (populate-environment builtins 0 1)
+                 (format "  pop_stack_slot(~a);" (length builtins))
+                 "\n"
+                 "}"
+                 "\n"))
+
+(define (generate-build-defines defines)
+  (string-append "\n"
+                 "void build_defines(ekans_value** pEnv) {"
+                 "\n"
+                 "  ekans_value* builtins = NULL;"
+                 "\n"
+                 "  push_stack_slot(&builtins);"
+                 "\n"
+                 "  build_builtins(&builtins);"
+                 "\n"
+                 (format "  *pEnv = create_environment(builtins, ~a);" (length defines))
+                 "\n"
+                 (generate-temp-declarations (length defines))
+                 (populate-environment defines 0 1)
+                 (format "  pop_stack_slot(~a);" (+ (length defines) 1))
+                 "\n"
+                 "}"
+                 "\n"))
+
+(define (epilogue)
+  (string-append
+   "}"
+   "\n"
+   (generate-build-builtins)
+   (generate-build-defines '()) ; TODO: this should be the actual functions defined in the program
+   (string-append "\n"
+                  "int main(int argc, char** argv) {"
+                  "\n"
+                  "  initialize_ekans();"
+                  "\n"
+                  "  ekans_value* env = NULL;"
+                  "\n"
+                  "  build_defines(&env);"
+                  "\n"
+                  "  f1(env);"
+                  "\n"
+                  "  finalize_ekans();"
+                  "\n"
+                  "  return 0;"
+                  "\n"
+                  "}")))
 
 (define (generate-file filename generated-code)
   (with-output-to-file filename (lambda () (write-string generated-code)) #:exists 'replace))
