@@ -269,6 +269,12 @@ void print_ekans_value_helper(ekans_value* v) {
       printf("'()");
       break;
     }
+    case closure:
+      // TODO: To be removed - right now it can help us to debug
+      if (v->value.c.function == plus) {
+        printf("Hack: Yay: We have found the plus!\n");
+      }
+      break;
     default: {
       assert(!"print_ekans_value: unsupported");
     } break;

@@ -41,12 +41,24 @@
           variable-id
           increment-context)))
 
+(define (generate-symbol-statement symbol-statement context)
+  (let* ([symbol-value (cdr symbol-statement)]
+         [variable-id (fetch-variable-id context)]
+         [increment-context (increment-variable-id context)]
+         [lookup-result (lookup symbol-value (initial-symbol-table '()) 0)]
+         [level (car lookup-result)]
+         [index (cadr lookup-result)])
+    (list (format "  v~a = get_environment(env, ~a, ~a);\n" variable-id level index)
+          variable-id
+          increment-context)))
+
 (define (generate-statement statement context)
   ; (displayln (format "[log] generate-statement: statement = ~a" statement))
   (let ([statement-type (car statement)])
     (cond
       [(eq? statement-type 'number-statement) (generate-number-statement statement context)]
       [(eq? statement-type 'bool-statement) (generate-bool-statement statement context)]
+      [(eq? statement-type 'symbol-statement) (generate-symbol-statement statement context)]
       [else (error (format "[log] Error: Unknown statement type ~a" statement-type))])))
 
 (define (generate-statements statements context)
@@ -153,6 +165,26 @@
                   "  return 0;"
                   "\n"
                   "}")))
+
+(define (initial-symbol-table defines)
+  (cons (map car defines) (cons (map car builtins) '())))
+
+(define (last-index-of l target current index)
+  (if (null? l)
+      current
+      (let ([head (car l)]
+            [rest (cdr l)])
+        (if (equal? head target)
+            (last-index-of rest target (list index) (+ index 1))
+            (last-index-of rest target current (+ index 1))))))
+
+(define (lookup symbol table level)
+  (if (null? table)
+      '()
+      (let ([result (last-index-of (car table) symbol '() 0)])
+        (if (null? result)
+            (lookup symbol (cdr table) (+ level 1))
+            (cons level result)))))
 
 (define (generate-file filename generated-code)
   (with-output-to-file filename (lambda () (write-string generated-code)) #:exists 'replace))
