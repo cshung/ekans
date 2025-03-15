@@ -52,6 +52,61 @@
           variable-id
           increment-context)))
 
+(define (generate-list-statement list-statement context)
+  (generate-application list-statement
+                        context) ;TODO - it could be "define" or "if", we will deal with them later
+  )
+
+(define (generate-arguments arguments prefix index environment-id context)
+  (if (null? arguments)
+      (cons prefix context)
+      (let* ([argument-result (generate-statement (car arguments) context)]
+             [argument-code (car argument-result)]
+             [argument-rest (cdr argument-result)]
+             [argument-variable (car argument-rest)]
+             [context (cadr argument-rest)])
+        (generate-arguments
+         (cdr arguments)
+         (string-append
+          prefix
+          argument-code
+          (format "  set_environment(v~a, ~a, v~a);" environment-id index argument-variable)
+          "\n")
+         (+ index 1)
+         environment-id
+         context))))
+
+(define (generate-application list-statement context)
+  (let* ([list-statement-list (cdr list-statement)]
+         [function (car list-statement-list)]
+         [arguments (cdr list-statement-list)]
+         [function-statement-result (generate-statement function context)]
+         [function-code (car function-statement-result)]
+         [function-rest (cdr function-statement-result)]
+         [function-id (car function-rest)]
+         [context (cadr function-rest)]
+         [closure-id (fetch-variable-id context)]
+         [context (increment-variable-id context)]
+         [environment-id (fetch-variable-id context)]
+         [context (increment-variable-id context)]
+         [arguments-result (generate-arguments arguments "" 0 environment-id context)]
+         [argument-code (car arguments-result)]
+         [context (cdr arguments-result)]
+         [result-id (fetch-variable-id context)]
+         [context (increment-variable-id context)])
+    (list
+     (string-append
+      function-code
+      (format "  v~a = closure_of(v~a);" closure-id function-id)
+      "\n"
+      (format "  v~a = create_environment(v~a, ~a);" environment-id closure-id (length arguments))
+      "\n"
+      argument-code
+      (format "  v~a = function_of(v~a)(v~a);" result-id function-id environment-id) ;
+      "\n")
+     result-id
+     context)))
+
 (define (generate-statement statement context)
   ; (displayln (format "[log] generate-statement: statement = ~a" statement))
   (let ([statement-type (car statement)])
@@ -59,6 +114,7 @@
       [(eq? statement-type 'number-statement) (generate-number-statement statement context)]
       [(eq? statement-type 'bool-statement) (generate-bool-statement statement context)]
       [(eq? statement-type 'symbol-statement) (generate-symbol-statement statement context)]
+      [(eq? statement-type 'list-statement) (generate-list-statement statement context)]
       [else (error (format "[log] Error: Unknown statement type ~a" statement-type))])))
 
 (define (generate-statements statements context)
