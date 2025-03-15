@@ -155,8 +155,8 @@
   (let ([code (generate-code parsed-program)]) (string-append prologue code (epilogue))))
 
 (define builtins
-  '(("+" "plus") ; plus
-    ))
+  '(("+" "plus") ; ekans_value* plus(ekans_value* environment);
+    ("-" "subtract"))) ; ekans_value* subtract(ekans_value* environment);
 
 (define (populate-environment elements index temp-id)
   (if (null? elements)
