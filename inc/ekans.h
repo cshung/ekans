@@ -48,6 +48,7 @@ ekans_function function_of(ekans_value* val);
 ekans_value* plus(ekans_value* environment);
 ekans_value* subtract(ekans_value* environment);
 ekans_value* multiply(ekans_value* environment);
+ekans_value* division(ekans_value* environment);
 
 void print_ekans_value(ekans_value* v);
 

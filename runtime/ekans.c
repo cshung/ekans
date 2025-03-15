@@ -324,6 +324,26 @@ ekans_value* multiply(ekans_value* environment) {
   return create_number_value(product);
 }
 
+ekans_value* division(ekans_value* environment) {
+  int quotient = environment->value.e.bindings[0]->value.n;
+  for (int i = 1; i < environment->value.e.binding_count; i++) {
+    assert(environment->value.e.bindings[i] != NULL);
+
+    if (environment->value.e.bindings[i]->type != number) {
+      fprintf(stderr, "not a number encountered in /\n");
+      exit(1);
+    }
+
+    const int t = environment->value.e.bindings[i]->value.n;
+    if (t == 0) {
+      fprintf(stderr, "failed to division by zero in the function: [%s]\n", __PRETTY_FUNCTION__);
+      exit(1);
+    }
+    quotient /= t;
+  }
+  return create_number_value(quotient);
+}
+
 // Allocation helpers - just quit the process whenever an error happens
 
 void* brutal_malloc(size_t size) {
