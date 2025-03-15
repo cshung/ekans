@@ -4,10 +4,9 @@
 #lang racket
 
 (require rackunit
+         rackunit/text-ui
          "../ekans/lexer.rkt"
          "../common/common.rkt")
-
-(provide test-lexer)
 
 (define-test-suite
  test-lexer
@@ -49,3 +48,5 @@
    (check-equal? (lexer (string->list "* 1 2")) (cons (cons 'symbol "*") (string->list " 1 2"))))
  (test-case "Test Operator Division"
    (check-equal? (lexer (string->list "/ 1 2")) (cons (cons 'symbol "/") (string->list " 1 2")))))
+
+(run-tests test-lexer)

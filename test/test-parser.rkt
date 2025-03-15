@@ -4,9 +4,8 @@
 #lang racket
 
 (require rackunit
+         rackunit/text-ui
          "../ekans/parser.rkt")
-
-(provide test-parser)
 
 (define-test-suite
  test-parser
@@ -65,3 +64,5 @@
                                    (list (cons 'number-statement 123)
                                          (cons 'list-statement (list (cons 'number-statement 234))))))
                        '()))))
+
+(run-tests test-parser)

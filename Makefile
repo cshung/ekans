@@ -4,8 +4,14 @@
 INCLUDES = -I./inc
 CFLAGS   = -fsanitize=address -Wall -Werror -g
 LDFLAGS  = -lasan
+CC       = clang
+CC0      = ./build/compiler-phase-0.out
+CC1      = ./build/compiler-phase-1.out
 
-default: clean build execute
+default: clean build test-phase-0 test-phase-1
+
+clean:
+	rm -rf *.out *.c build/
 
 fmt:
 	find . -type f -iname "*.rkt" | xargs raco fmt -i --indent 2
@@ -13,48 +19,50 @@ fmt:
 
 build: fmt build/ekans.o
 	mkdir -p build
-	raco make app/main.rkt                      # https://docs.racket-lang.org/raco/make.html
-	raco exe -o build/compiler.out app/main.rkt # https://docs.racket-lang.org/raco/exe.html
+	raco make app/main.rkt          # https://docs.racket-lang.org/raco/make.html
+	raco exe -o $(CC0) app/main.rkt # https://docs.racket-lang.org/raco/exe.html
 
-build/ekans.o:	inc/ekans.h runtime/ekans.c
+build/ekans.o: runtime/ekans.c
 	mkdir -p build
-	clang -g -I inc -c -o build/ekans.o runtime/ekans.c
+	$(CC) $(INCLUDES) $(CFLAGS) -c -o $@ $?
 
-execute: clean build
+test-phase-0: clean build
 	# for program in $$(find ./test/data/ -type f -iname "*.rkt"); do \
-	#	./compiler.out $$program;                                       \
+	#   $(CC0) $$program;                                             \
 	# done
 	#
-	./build/compiler.out test/data/number.rkt
-	#
-	./build/compiler.out test/data/bool.rkt
+	$(CC0) test/data/add_t1.rkt
 
-clean:
-	rm -rf *.out *.c build/
+test-phase-1: test-phase-0
+	$(CC) $(INCLUDES) $(CFLAGS) -o $(CC1) ./build/main.c build/ekans.o
+	$(CC1)
 
-test-all: clean unit-tests test-compiled-c-code test-runtime
-
-test-compiled-c-code: build
-	set -e;                                                                      \
-	for file in $$(find test/data -name '*.rkt' | sed 's/\.rkt$$//'); do         \
-		if [ -f "$$file.expect" ]; then                                            \
-			rm -f ./build/output.actual;                                             \
-			./build/compiler.out "$$file.rkt";                                       \
-			clang $(INCLUDES) $(CFLAGS) -o build/app.out build/main.c build/ekans.o; \
-			./build/app.out > ./build/output.actual;                                 \
-			diff "$$file.expect" ./build/output.actual;                              \
-			diff -q "$$file.expect" ./build/output.actual >/dev/null;                \
-		fi;                                                                        \
+test-all-phases: build
+	set -e;                                                               \
+	for file in $$(find test/data -name '*.rkt' | sed 's/\.rkt$$//'); do  \
+		if [ -f "$$file.expect" ]; then                                     \
+			rm -f ./build/output.actual;                                      \
+			$(CC0) "$$file.rkt";                                              \
+			$(CC) $(INCLUDES) $(CFLAGS) -o $(CC1) build/main.c build/ekans.o; \
+			$(CC1) > ./build/output.actual;                                   \
+			diff "$$file.expect" ./build/output.actual;                       \
+			diff -q "$$file.expect" ./build/output.actual >/dev/null;         \
+		fi;                                                                 \
 	done
+
+test-lexer: fmt
+	raco test test/test-lexer.rkt
+
+test-parser: fmt
+	raco test test/test-parser.rkt
 
 test-runtime: clean fmt
 	mkdir -p build
-	clang $(INCLUDES) $(CFLAGS) -c -o build/ekans.o runtime/ekans.c
-	clang $(INCLUDES) $(CFLAGS) -o build/test-runtime.out test/runtime/main.c build/ekans.o
+	$(CC) $(INCLUDES) $(CFLAGS) -c -o build/ekans.o runtime/ekans.c
+	$(CC) $(INCLUDES) $(CFLAGS) -o build/test-runtime.out test/runtime/main.c build/ekans.o
 	# ASAN_OPTIONS=detect_leaks=1 ./build/test-runtime.out # OSX doesn't work
 	./build/test-runtime.out
 
-unit-tests: fmt
-	raco test test/main.rkt
+test-all: clean test-lexer test-parser test-runtime test-all-phases 
 
-.PHONY: default fmt build execute clean test-compiled-c-code unit-tests
+.PHONY: default clean fmt build test-phase-0 test-phase-1 test-all-phases test-lexer test-parser test-runtime test-all
