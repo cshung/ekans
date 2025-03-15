@@ -31,7 +31,7 @@ test-phase-0: clean build
 	#   $(CC0) $$program;                                             \
 	# done
 	#
-	$(CC0) test/data/sub_t1.rkt
+	$(CC0) test/data/mul_t3.rkt
 
 test-phase-1: test-phase-0
 	$(CC) $(INCLUDES) $(CFLAGS) -o $(CC1) ./build/main.c build/ekans.o

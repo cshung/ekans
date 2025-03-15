@@ -6,6 +6,7 @@
 #include <ekans.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
 //
 // error handling principle:
@@ -299,6 +300,28 @@ ekans_value* subtract(ekans_value* environment) {
     diff -= environment->value.e.bindings[i]->value.n;
   }
   return create_number_value(diff);
+}
+
+ekans_value* multiply(ekans_value* environment) {
+  int product = 1;
+  for (int i = 0; i < environment->value.e.binding_count; i++) {
+    assert(environment->value.e.bindings[i] != NULL);
+
+    if (environment->value.e.bindings[i]->type != number) {
+      fprintf(stderr, "not a number encountered in *\n");
+      exit(1);
+    }
+
+    const int t = environment->value.e.bindings[i]->value.n;
+    if (t != 0) {
+      if (product > INT_MAX / t || product < INT_MIN / t) {
+        fprintf(stderr, "failed to integer overflow in the function: [%s]\n", __PRETTY_FUNCTION__);
+        exit(1);
+      }
+    }
+    product *= t;
+  }
+  return create_number_value(product);
 }
 
 // Allocation helpers - just quit the process whenever an error happens
