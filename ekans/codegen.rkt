@@ -9,41 +9,41 @@
 (provide generate-main-function)
 (provide generate-file)
 
-(define (temp-id context)
-  (car context)
-)
+(define (fetch-variable-id context)
+  (car context))
 
-(define (num-temps context)
-  (- (temp-id context) 1)
-)
+(define (decrement-number-of-variables context)
+  (- (fetch-variable-id context) 1))
 
-(define (increment-temp-id context)
-  (cons (+ (car context) 1) (cdr context))
-)
+(define (increment-variable-id context)
+  (cons (+ (car context) 1) (cdr context)))
 
 (define prologue "#include <ekans.h>\n\nint main(void) {\n  initialize_ekans();\n  collect();\n")
 (define epilogue "  finalize_ekans();\n  return 0;\n}\n")
 
+(define (generate-print-ekans-value-statement a)
+  (format "  print_ekans_value(v~a);\n" a))
+
+(define generate-collect-statement "  collect();\n")
+
 (define (generate-number-statement number-statement context)
   (let ([number-value (cdr number-statement)]
-        [temp-id (temp-id context)])
-    (cons (format "  v~a = create_number_value(~a);\n  print_ekans_value(v~a);\n  collect();\n"
-                  temp-id
-                  number-value
-                  temp-id)
-          (increment-temp-id context))))
+        [variable-id (fetch-variable-id context)]
+        [increment-context (increment-variable-id context)])
+    (list (format "  v~a = create_number_value(~a);\n" variable-id number-value)
+          variable-id
+          increment-context)))
 
 (define (generate-bool-statement bool-statement context)
   (let ([bool-value (cdr bool-statement)]
-        [temp-id (temp-id context)])
-    (cons (format "  v~a = create_boolean_value(~a);\n  print_ekans_value(v~a);\n  collect();\n"
-                  temp-id
-                  (if bool-value "true" "false")
-                  temp-id)
-          (increment-temp-id context))))
+        [variable-id (fetch-variable-id context)]
+        [increment-context (increment-variable-id context)])
+    (list (format "  v~a = create_boolean_value(~a);\n" variable-id (if bool-value "true" "false"))
+          variable-id
+          increment-context)))
 
 (define (generate-statement statement context)
-  (displayln (format "[log] generate-statement: statement = ~a" statement))
+  ; (displayln (format "[log] generate-statement: statement = ~a" statement))
   (let ([statement-type (car statement)])
     (cond
       [(eq? statement-type 'number-statement) (generate-number-statement statement context)]
@@ -51,34 +51,38 @@
       [else (error (format "[log] Error: Unknown statement type ~a" statement-type))])))
 
 (define (generate-statements statements context)
-  (displayln (format "[log] generate-statements: statements = ~a" statements))
+  ; (displayln (format "[log] generate-statements: statements = ~a" statements))
   (if (null? statements)
       (cons empty-string context)
       (let* ([first-statement-pair (generate-statement (car statements) context)]
              [first-statement (car first-statement-pair)]
-             [context (cdr first-statement-pair)]
+             [context (car (cdr (cdr first-statement-pair)))]
              [rest-statement-pair (generate-statements (cdr statements) context)]
              [rest-statement (car rest-statement-pair)]
              [context (cdr rest-statement-pair)])
-        (cons (string-append first-statement rest-statement) context))))
+        (cons (string-append first-statement
+                             (generate-print-ekans-value-statement (car (cdr first-statement-pair)))
+                             generate-collect-statement
+                             rest-statement)
+              context))))
 
-(define (generate-temp-declarations num-temps)
-  (if (= num-temps 0)
+(define (generate-temp-declarations number-of-variables)
+  (if (= number-of-variables 0)
       ""
-      (string-append (generate-temp-declarations (- num-temps 1))
+      (string-append (generate-temp-declarations (- number-of-variables 1))
                      (format "  ekans_value* v~a = NULL;\n  push_stack_slot(&v~a);\n"
-                             num-temps
-                             num-temps))))
+                             number-of-variables
+                             number-of-variables))))
 
 (define (generate-code parsed-program)
   (let* ([statements (car parsed-program)]
          [statements-pair (generate-statements statements '(1))]
          [statements-code (car statements-pair)]
          [context (cdr statements-pair)]
-         [num-temps (num-temps context)])
-    (string-append (generate-temp-declarations num-temps)
+         [number-of-variables (decrement-number-of-variables context)])
+    (string-append (generate-temp-declarations number-of-variables)
                    statements-code
-                   (format "  pop_stack_slot(~a);\n" num-temps))))
+                   (format "  pop_stack_slot(~a);\n" number-of-variables))))
 
 (define (generate-main-function parsed-program)
   (let ([code (generate-code parsed-program)]) (string-append prologue code epilogue)))

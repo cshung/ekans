@@ -20,10 +20,13 @@ build/ekans.o:	inc/ekans.h runtime/ekans.c
 	mkdir -p build
 	clang -g -I inc -c -o build/ekans.o runtime/ekans.c
 
-execute:
+execute: clean build
 	# for program in $$(find ./test/data/ -type f -iname "*.rkt"); do \
 	#	./compiler.out $$program;                                       \
 	# done
+	#
+	./build/compiler.out test/data/number.rkt
+	#
 	./build/compiler.out test/data/bool.rkt
 
 clean:

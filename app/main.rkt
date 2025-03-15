@@ -27,7 +27,7 @@
   (if (eq? parsed-program 'error)
       (displayln "Error: Unable to parse the input.")
       (let ([generated-code (generate-code parsed-program)])
-        (displayln generated-code)
+        ; (displayln generated-code)
         (displayln (generate-main-function parsed-program))
         (generate-file "build/main.c" (generate-main-function parsed-program)))))
 
