@@ -1,0 +1,12 @@
+# Copyright (c) 2025 Good Night, Good Morning and contributors (see Contributors.md)
+# Licensed under the MIT License. See the LICENSE file in the project root for details.
+
+repos:
+- repo: local
+  hooks:
+  - id: make-fmt
+    name: Run make fmt
+    entry: make fmt
+    language: system
+    pass_filenames: false
+    always_run: true
