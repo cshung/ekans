@@ -1,72 +1,83 @@
 # Copyright (c) 2025 Good Night, Good Morning and contributors (see Contributors.md)
 # Licensed under the MIT License. See the LICENSE file in the project root for details.
 
-INCLUDES = -I./inc
+DIR_BUILD    = build
+DIR_INCLUDE  = inc
+DIR_APP      = app
+DIR_RUNTIME  = runtime
+DIR_TEST     = test
+DIR_TESTDATA = $(DIR_TEST)/data
+
+INCLUDES = -I./$(DIR_INCLUDE)
 CFLAGS   = -fsanitize=address -Wall -Werror -g
 LDFLAGS  = -lasan
 CC       = clang
-CC0      = ./build/compiler-phase-0.out
-CC1      = ./build/compiler-phase-1.out
+CC0      = $(DIR_BUILD)/compiler-phase-0.out
+CC1      = $(DIR_BUILD)/compiler-phase-1.out
 
 default: clean build test-phase-0 test-phase-1
 
 clean:
-	rm -rf *.out *.c build/
+	rm -f *.out *.c 
+	rm -rf $(DIR_BUILD)
+	find . -type d -name "compiled" -exec rm -rf {} +
 
 fmt:
 	find . -type f -iname "*.rkt" | xargs raco fmt -i --indent 2
 	find . -type f -iname "*.c" -o -iname "*.h" | xargs clang-format -i -style=file
 
-build: fmt build/ekans.o
-	mkdir -p build
-	raco make app/main.rkt          # https://docs.racket-lang.org/raco/make.html
-	raco exe -o $(CC0) app/main.rkt # https://docs.racket-lang.org/raco/exe.html
+build: $(CC0)
+ 
+$(CC0): $(DIR_APP)/main.rkt $(DIR_BUILD)/ekans.o
+	mkdir -p $(DIR_BUILD)
+	raco make $<      # https://docs.racket-lang.org/raco/make.html
+	raco exe -o $@ $< # https://docs.racket-lang.org/raco/exe.html
 
-build/ekans.o: runtime/ekans.c
-	mkdir -p build
+$(DIR_BUILD)/ekans.o: $(DIR_RUNTIME)/ekans.c
+	mkdir -p $(DIR_BUILD)
 	$(CC) $(INCLUDES) $(CFLAGS) -c -o $@ $?
 
-test-phase-0: clean build
-	# for program in $$(find ./test/data/ -type f -iname "*.rkt"); do \
-	#   $(CC0) $$program;                                             \
+test-phase-0: $(DIR_BUILD)/main.c
+
+$(DIR_BUILD)/main.c: $(CC0)
+	# for program in $$(find $(DIR_TESTDATA) -type f -iname "*.rkt"); do \
+	#   $< $$program;                                                    \
 	# done
 	#
-	$(CC0) test/data/debug.rkt
+	$< $(DIR_TESTDATA)/debug.rkt
 
-test-phase-1: test-phase-0
-	$(CC) $(INCLUDES) $(CFLAGS) -o $(CC1) ./build/main.c build/ekans.o
+test-phase-1: $(DIR_BUILD)/main.c $(DIR_BUILD)/ekans.o
+	$(CC) $(INCLUDES) $(CFLAGS) -o $(CC1) $?
 	$(CC1)
 
-test-all-phases: build
-	set -e;                                                               \
-	for file in $$(find test/data -name '*.rkt' | sed 's/\.rkt$$//'); do  \
-		if [ -f "$$file.expect" ]; then                                     \
-			rm -f ./build/output.actual;                                      \
-			$(CC0) "$$file.rkt";                                              \
-			$(CC) $(INCLUDES) $(CFLAGS) -o $(CC1) build/main.c build/ekans.o; \
-			$(CC1) > ./build/output.actual;                                   \
-			echo "Input"; \
-			cat "$$file.rkt";                                                 \
-			echo "Output"; \
-			cat ./build/output.actual;                                        \
-			diff "$$file.expect" ./build/output.actual;                       \
-			diff -q "$$file.expect" ./build/output.actual >/dev/null;         \
-		fi;                                                                 \
+test-all-phases: test-phase-0 test-phase-1
+	set -e;                                                                             \
+	for file in $$(find $(DIR_TESTDATA) -name '*.rkt' | sed 's/\.rkt$$//'); do          \
+		if [ -f "$$file.expect" ]; then                                                   \
+			rm -f $(DIR_BUILD)/output.actual;                                               \
+			$(CC0) "$$file.rkt";                                                            \
+			$(CC) $(INCLUDES) $(CFLAGS) -o $(CC1) $(DIR_BUILD)/main.c $(DIR_BUILD)/ekans.o; \
+			$(CC1) > $(DIR_BUILD)/output.actual;                                            \
+			echo "Input";                                                                   \
+			cat "$$file.rkt";                                                               \
+			echo "Output";                                                                  \
+			cat $(DIR_BUILD)/output.actual;                                                 \
+			diff "$$file.expect" $(DIR_BUILD)/output.actual;                                \
+			diff -q "$$file.expect" $(DIR_BUILD)/output.actual >/dev/null;                  \
+		fi;                                                                               \
 	done
 
-test-lexer: fmt
-	raco test test/test-lexer.rkt
+test-lexer: test/test-lexer.rkt
+	raco test $<
 
-test-parser: fmt
-	raco test test/test-parser.rkt
+test-parser: test/test-parser.rkt
+	raco test $<
 
-test-runtime: clean fmt
-	mkdir -p build
-	$(CC) $(INCLUDES) $(CFLAGS) -c -o build/ekans.o runtime/ekans.c
-	$(CC) $(INCLUDES) $(CFLAGS) -o build/test-runtime.out test/runtime/main.c build/ekans.o
-	# ASAN_OPTIONS=detect_leaks=1 ./build/test-runtime.out # OSX doesn't work
-	./build/test-runtime.out
+test-runtime: $(DIR_BUILD)/ekans.o
+	$(CC) $(INCLUDES) $(CFLAGS) -o $(DIR_BUILD)/$@.out $(DIR_TEST)/runtime/main.c $<
+	# ASAN_OPTIONS=detect_leaks=1 $(DIR_BUILD)/$@.out # OSX doesn't work
+	$(DIR_BUILD)/$@.out
 
-test-all: clean test-lexer test-parser test-runtime test-all-phases 
+test-all: clean fmt test-lexer test-parser test-runtime test-all-phases 
 
 .PHONY: default clean fmt build test-phase-0 test-phase-1 test-all-phases test-lexer test-parser test-runtime test-all
