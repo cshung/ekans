@@ -17,7 +17,8 @@ void test_initialize_ekans() {
 void test_create_number_value() {
   initialize_ekans();
   {
-    ekans_value* const v = create_number_value(20250312);
+    ekans_value* v = NULL;
+    create_number_value(20250312, &v);
     assert(is(v, number));
     assert(v->value.n == 20250312);
     assert(head.next == v);
@@ -32,7 +33,8 @@ void test_create_number_value() {
 void test_create_boolean_value() {
   initialize_ekans();
   {
-    ekans_value* const v = create_boolean_value(true);
+    ekans_value* v = NULL;
+    create_boolean_value(true, &v);
     assert(is(v, boolean));
     assert(v->value.b == true);
     assert(head.next == v);
@@ -47,7 +49,8 @@ void test_create_boolean_value() {
 void test_create_nil_value() {
   initialize_ekans();
   {
-    ekans_value* const v = create_nil_value();
+    ekans_value* v = NULL;
+    create_nil_value(&v);
     assert(is(v, nil));
     assert(head.next == v);
     assert(v->prev == &head);
@@ -61,10 +64,14 @@ void test_create_nil_value() {
 void test_create_cons_value() {
   initialize_ekans();
   {
-    ekans_value* const a = create_number_value(1);
-    ekans_value* const b = create_nil_value();
-    ekans_value*       c = create_cons_cell(a, b);
+    ekans_value* a = NULL;
+    ekans_value* b = NULL;
+    ekans_value* c = NULL;
+    // Intentionally not push_stack_slot for a and b to test marking
     push_stack_slot(&c);
+    create_number_value(1, &a);
+    create_nil_value(&b);
+    create_cons_cell(a, b, &c);
     collect();
     print_ekans_value(c);
     pop_stack_slot(1);
@@ -94,31 +101,36 @@ void test_addition(void) {
   ekans_value* local_environment  = NULL;
   ekans_value* plus_function      = NULL;
   ekans_value* result             = NULL;
+  ekans_value* p                  = NULL;
+  ekans_value* q                  = NULL;
 
   push_stack_slot(&global_environment);
   push_stack_slot(&plus_closure);
   push_stack_slot(&local_environment);
   push_stack_slot(&plus_function);
   push_stack_slot(&result);
+  push_stack_slot(&p);
+  push_stack_slot(&q);
 
-  global_environment = create_environment(NULL, 1);
-  plus_closure       = create_closure(global_environment, plus);
+  create_environment(NULL, 1, &global_environment);
+  create_closure(global_environment, plus, &plus_closure);
   set_environment(global_environment, 0, plus_closure);
 
-  int p = 1, q = 2;
-
-  local_environment = create_environment(global_environment, 2);
+  create_environment(global_environment, 2, &local_environment);
   assert(local_environment);
-  set_environment(local_environment, 0, create_number_value(p));
-  set_environment(local_environment, 1, create_number_value(q));
-  plus_function = get_environment(global_environment, 0, 0);
+
+  create_number_value(1, &p);
+  create_number_value(2, &q);
+  set_environment(local_environment, 0, p);
+  set_environment(local_environment, 1, q);
+  get_environment(global_environment, 0, 0, &plus_function);
   assert(plus_function);
 
   function_of(plus_closure)(local_environment, &result);
   collect(); // we should be able to put the collect call between every line, and it should still be correct
   assert(result->value.n == 3);
 
-  pop_stack_slot(5);
+  pop_stack_slot(7);
   finalize_ekans();
   printf("[%s] passed\n", __FUNCTION__);
 }

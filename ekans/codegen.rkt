@@ -68,7 +68,7 @@
   (let ([number-value (cdr number-statement)]
         [variable-id (new-variable-id context)]
         [context (increment-variable-id context)])
-    (list (format "  v~a = create_number_value(~a);\n" variable-id number-value)
+    (list (format "  create_number_value(~a, &v~a);\n" number-value variable-id)
           variable-id
           context)))
 
@@ -79,7 +79,7 @@
   (let ([bool-value (cdr bool-statement)]
         [variable-id (new-variable-id context)]
         [context (increment-variable-id context)])
-    (list (format "  v~a = create_boolean_value(~a);\n" variable-id (if bool-value "true" "false"))
+    (list (format "  create_boolean_value(~a, &v~a);\n" (if bool-value "true" "false") variable-id)
           variable-id
           context)))
 
@@ -100,7 +100,7 @@
          [lookup-result (lookup symbol-value (symbol-table context) 0)]
          [level (car lookup-result)]
          [index (cadr lookup-result)])
-    (list (format "  v~a = get_environment(env, ~a, ~a);\n" variable-id level index)
+    (list (format "  get_environment(env, ~a, ~a, &v~a);\n" level index variable-id)
           variable-id
           context)))
 
@@ -154,9 +154,9 @@
     (list
      (string-append
       function-code
-      (format "  v~a = closure_of(v~a);" closure-id function-id)
+      (format "  closure_of(v~a, &v~a);" function-id closure-id)
       "\n"
-      (format "  v~a = create_environment(v~a, ~a);" environment-id closure-id (length arguments))
+      (format "  create_environment(v~a, ~a, &v~a);" closure-id (length arguments) environment-id)
       "\n"
       argument-code
       (format "  function_of(v~a)(v~a, &v~a);" function-id environment-id result-id)
@@ -208,7 +208,7 @@
          [context (enqueue-pending-function new-function-id function-body new-context)]
          [closure-id (new-variable-id context)]
          [context (increment-variable-id context)])
-    (list (format "  v~a = create_closure(env, f~a);\n" closure-id new-function-id)
+    (list (format "  create_closure(env, f~a, &v~a);\n" new-function-id closure-id)
           closure-id
           context)))
 
@@ -356,7 +356,7 @@
 (define (populate-environment elements index temp-id)
   (if (null? elements)
       empty-string
-      (string-append (format "  v~a = create_closure(*pEnv, ~a);" temp-id (cadr (car elements)))
+      (string-append (format "  create_closure(*pEnv, ~a, &v~a);" (cadr (car elements)) temp-id)
                      "\n"
                      (format "  set_environment(*pEnv, ~a, v~a);" index temp-id)
                      "\n"
@@ -370,7 +370,7 @@
                  "void build_builtins(ekans_value** pEnv) "
                  lb
                  "\n"
-                 (format "  *pEnv = create_environment(NULL, ~a);" (length builtins))
+                 (format "  create_environment(NULL, ~a, pEnv);" (length builtins))
                  "\n"
                  (generate-temp-declarations (length builtins))
                  (populate-environment builtins 0 1)
@@ -395,7 +395,7 @@
                  "\n"
                  "  build_builtins(&builtins);"
                  "\n"
-                 (format "  *pEnv = create_environment(builtins, ~a);" (length defines))
+                 (format "  create_environment(builtins, ~a, pEnv);" (length defines))
                  "\n"
                  (generate-temp-declarations (length defines))
                  (populate-environment defines 0 1)

@@ -7,20 +7,20 @@
 (require "../ekans/parser.rkt")
 (require "../ekans/codegen.rkt")
 
-(define (compiler filename)
-  (define input (read-file filename))
+(define (compiler input-file output-file)
+  (define input (read-file input-file))
   (define parsed-program (parse-statements input))
   (if (eq? parsed-program 'error)
       (displayln "Error: Unable to parse the input.")
       (let ([generated-code (generate-all-code (car parsed-program))])
-        (generate-file "build/main.c" generated-code))))
+        (generate-file output-file generated-code))))
 
 (define (main)
   (define args (vector->list (current-command-line-arguments)))
-  (if (null? args)
-      (displayln "Error: No input file provided.")
+  (if (< (length args) 2)
+      (displayln "Usage: ./compiler.out input.rkt output.c")
       (begin
-        (compiler (car args))
+        (compiler (car args) (cadr args))
         (displayln "") ; Avoid printing some random number to the console
         )))
 

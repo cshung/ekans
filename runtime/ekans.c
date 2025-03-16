@@ -41,57 +41,57 @@ void finalize_ekans() {
 
 // value creation routines
 
-ekans_value* create_number_value(int v) {
+void create_number_value(int v, ekans_value** pReturn) {
   ekans_value* result = brutal_malloc(sizeof(ekans_value));
   result->type        = number;
   result->value.n     = v;
+  *pReturn            = result;
   append(result);
-  return result;
 }
 
-ekans_value* create_boolean_value(bool v) {
+void create_boolean_value(bool v, ekans_value** pReturn) {
   ekans_value* result = brutal_malloc(sizeof(ekans_value));
   result->type        = boolean;
   result->value.b     = v;
+  *pReturn            = result;
   append(result);
-  return result;
 }
 
-ekans_value* create_environment(ekans_value* parent, const int size) {
+void create_environment(ekans_value* parent, const int size, ekans_value** pReturn) {
   assert(parent == NULL || is(parent, environment));
   ekans_value* result           = brutal_malloc(sizeof(ekans_value));
   result->type                  = environment;
   result->value.e.bindings      = (ekans_value**)brutal_calloc(size, sizeof(ekans_value*));
   result->value.e.binding_count = size;
   result->value.e.parent        = parent;
+  *pReturn                      = result;
   append(result);
-  return result;
 }
 
-ekans_value* create_closure(ekans_value* env, ekans_function function) {
+void create_closure(ekans_value* env, ekans_function function, ekans_value** pReturn) {
   assert(is(env, environment));
   ekans_value* result      = brutal_malloc(sizeof(ekans_value));
   result->type             = closure;
   result->value.c.closure  = env;
   result->value.c.function = function;
+  *pReturn                 = result;
   append(result);
-  return result;
 }
 
-ekans_value* create_nil_value() {
+void create_nil_value(ekans_value** pReturn) {
   ekans_value* result = brutal_malloc(sizeof(ekans_value));
   result->type        = nil;
+  *pReturn            = result;
   append(result);
-  return result;
 }
 
-ekans_value* create_cons_cell(ekans_value* head, ekans_value* tail) {
+void create_cons_cell(ekans_value* head, ekans_value* tail, ekans_value** pReturn) {
   ekans_value* result  = brutal_malloc(sizeof(ekans_value));
   result->type         = cons;
   result->value.l.head = head;
   result->value.l.tail = tail;
+  *pReturn             = result;
   append(result);
-  return result;
 }
 
 // Garbage collection routines
@@ -194,7 +194,7 @@ void set_environment(ekans_value* env, int index, ekans_value* value) {
   env->value.e.bindings[index] = value;
 }
 
-ekans_value* get_environment(ekans_value* env, int levels_up, int index) {
+void get_environment(ekans_value* env, int levels_up, int index, ekans_value** pReturn) {
   assert(is(env, environment));
   while (levels_up > 0 && env != NULL) {
     env = env->value.e.parent;
@@ -204,15 +204,15 @@ ekans_value* get_environment(ekans_value* env, int levels_up, int index) {
   }
 
   assert(index < env->value.e.binding_count);
-  return env->value.e.bindings[index];
+  *pReturn = env->value.e.bindings[index];
 }
 
-ekans_value* closure_of(ekans_value* val) {
+void closure_of(ekans_value* val, ekans_value** pReturn) {
   if (!is(val, closure)) {
     fprintf(stderr, "not a function encountered in a call\n");
     exit(1);
   }
-  return val->value.c.closure;
+  *pReturn = val->value.c.closure;
 }
 
 ekans_function function_of(ekans_value* val) {
@@ -292,7 +292,7 @@ void plus(ekans_value* environment, ekans_value** pReturn) {
     }
     sum += environment->value.e.bindings[i]->value.n;
   }
-  *pReturn = create_number_value(sum);
+  create_number_value(sum, pReturn);
 }
 
 void subtract(ekans_value* environment, ekans_value** pReturn) {
@@ -305,7 +305,7 @@ void subtract(ekans_value* environment, ekans_value** pReturn) {
     }
     diff -= environment->value.e.bindings[i]->value.n;
   }
-  *pReturn = create_number_value(diff);
+  create_number_value(diff, pReturn);
 }
 
 void multiply(ekans_value* environment, ekans_value** pReturn) {
@@ -327,7 +327,7 @@ void multiply(ekans_value* environment, ekans_value** pReturn) {
     }
     product *= t;
   }
-  *pReturn = create_number_value(product);
+  create_number_value(product, pReturn);
 }
 
 void division(ekans_value* environment, ekans_value** pReturn) {
@@ -347,7 +347,7 @@ void division(ekans_value* environment, ekans_value** pReturn) {
     }
     quotient /= t;
   }
-  *pReturn = create_number_value(quotient);
+  create_number_value(quotient, pReturn);
 }
 
 // Allocation helpers - just quit the process whenever an error happens
