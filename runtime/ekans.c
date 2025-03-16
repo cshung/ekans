@@ -208,12 +208,18 @@ ekans_value* get_environment(ekans_value* env, int levels_up, int index) {
 }
 
 ekans_value* closure_of(ekans_value* val) {
-  assert(is(val, closure));
+  if (!is(val, closure)) {
+    fprintf(stderr, "not a function encountered in a call\n");
+    exit(1);
+  }
   return val->value.c.closure;
 }
 
 ekans_function function_of(ekans_value* val) {
-  assert(is(val, closure));
+  if (!is(val, closure)) {
+    fprintf(stderr, "not a function encountered in a call\n");
+    exit(1);
+  }
   return val->value.c.function;
 }
 
@@ -276,7 +282,7 @@ void print_ekans_value_helper(ekans_value* v) {
   }
 }
 
-ekans_value* plus(ekans_value* environment) {
+void plus(ekans_value* environment, ekans_value** pReturn) {
   int sum = 0;
   for (int i = 0; i < environment->value.e.binding_count; i++) {
     assert(environment->value.e.bindings[i] != NULL);
@@ -286,10 +292,10 @@ ekans_value* plus(ekans_value* environment) {
     }
     sum += environment->value.e.bindings[i]->value.n;
   }
-  return create_number_value(sum);
+  *pReturn = create_number_value(sum);
 }
 
-ekans_value* subtract(ekans_value* environment) {
+void subtract(ekans_value* environment, ekans_value** pReturn) {
   int diff = environment->value.e.bindings[0]->value.n;
   for (int i = 1; i < environment->value.e.binding_count; i++) {
     assert(environment->value.e.bindings[i] != NULL);
@@ -299,10 +305,10 @@ ekans_value* subtract(ekans_value* environment) {
     }
     diff -= environment->value.e.bindings[i]->value.n;
   }
-  return create_number_value(diff);
+  *pReturn = create_number_value(diff);
 }
 
-ekans_value* multiply(ekans_value* environment) {
+void multiply(ekans_value* environment, ekans_value** pReturn) {
   int product = 1;
   for (int i = 0; i < environment->value.e.binding_count; i++) {
     assert(environment->value.e.bindings[i] != NULL);
@@ -321,10 +327,10 @@ ekans_value* multiply(ekans_value* environment) {
     }
     product *= t;
   }
-  return create_number_value(product);
+  *pReturn = create_number_value(product);
 }
 
-ekans_value* division(ekans_value* environment) {
+void division(ekans_value* environment, ekans_value** pReturn) {
   int quotient = environment->value.e.bindings[0]->value.n;
   for (int i = 1; i < environment->value.e.binding_count; i++) {
     assert(environment->value.e.bindings[i] != NULL);
@@ -341,7 +347,7 @@ ekans_value* division(ekans_value* environment) {
     }
     quotient /= t;
   }
-  return create_number_value(quotient);
+  *pReturn = create_number_value(quotient);
 }
 
 // Allocation helpers - just quit the process whenever an error happens

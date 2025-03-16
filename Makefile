@@ -31,7 +31,7 @@ test-phase-0: clean build
 	#   $(CC0) $$program;                                             \
 	# done
 	#
-	$(CC0) test/data/div_t1.rkt
+	$(CC0) test/data/debug.rkt
 
 test-phase-1: test-phase-0
 	$(CC) $(INCLUDES) $(CFLAGS) -o $(CC1) ./build/main.c build/ekans.o
@@ -45,6 +45,10 @@ test-all-phases: build
 			$(CC0) "$$file.rkt";                                              \
 			$(CC) $(INCLUDES) $(CFLAGS) -o $(CC1) build/main.c build/ekans.o; \
 			$(CC1) > ./build/output.actual;                                   \
+			echo "Input"; \
+			cat "$$file.rkt";                                                 \
+			echo "Output"; \
+			cat ./build/output.actual;                                        \
 			diff "$$file.expect" ./build/output.actual;                       \
 			diff -q "$$file.expect" ./build/output.actual >/dev/null;         \
 		fi;                                                                 \

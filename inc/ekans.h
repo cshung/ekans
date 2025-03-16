@@ -17,7 +17,7 @@ typedef enum {
 
 typedef struct ekans_value ekans_value;
 
-typedef ekans_value* (*ekans_function)(ekans_value*);
+typedef void (*ekans_function)(ekans_value*, ekans_value**);
 
 // value creation routines
 
@@ -45,10 +45,10 @@ ekans_function function_of(ekans_value* val);
 
 // primitive functions
 
-ekans_value* plus(ekans_value* environment);
-ekans_value* subtract(ekans_value* environment);
-ekans_value* multiply(ekans_value* environment);
-ekans_value* division(ekans_value* environment);
+void plus(ekans_value* environment, ekans_value** pReturn);
+void subtract(ekans_value* environment, ekans_value** pReturn);
+void multiply(ekans_value* environment, ekans_value** pReturn);
+void division(ekans_value* environment, ekans_value** pReturn);
 
 void print_ekans_value(ekans_value* v);
 

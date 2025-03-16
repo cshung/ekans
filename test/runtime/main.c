@@ -114,7 +114,7 @@ void test_addition(void) {
   plus_function = get_environment(global_environment, 0, 0);
   assert(plus_function);
 
-  result = function_of(plus_closure)(local_environment);
+  function_of(plus_closure)(local_environment, &result);
   collect(); // we should be able to put the collect call between every line, and it should still be correct
   assert(result->value.n == 3);
 
