@@ -94,6 +94,13 @@ void create_cons_cell(ekans_value* head, ekans_value* tail, ekans_value** pRetur
   append(result);
 }
 
+void create_nil(ekans_value** pReturn) {
+  ekans_value* result = brutal_malloc(sizeof(ekans_value));
+  result->type        = nil;
+  *pReturn            = result;
+  append(result);
+}
+
 // Garbage collection routines
 
 void push_stack_slot(ekans_value** slot) {
@@ -254,7 +261,7 @@ void print_ekans_value_helper(ekans_value* v) {
       }
     } break;
     case cons: {
-      printf("(");
+      printf("'(");
       while (true) {
         print_ekans_value_helper(v->value.l.head);
         v = v->value.l.tail;

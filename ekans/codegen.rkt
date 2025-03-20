@@ -212,6 +212,13 @@
           closure-id
           context)))
 
+(define (generate-quote-statement quote-statement context)
+  (list (format "  create_nil(&v~a);\n"
+                (new-variable-id context)) ; TODO, create the right value based on the quote-statement
+        (new-variable-id context)
+        (increment-variable-id context)
+        context))
+
 ;
 ; This function generates the code for any statements, it just dispatches the statement to the appropriate function
 ;
@@ -223,6 +230,7 @@
       [(eq? statement-type 'bool-statement) (generate-bool-statement statement context)]
       [(eq? statement-type 'symbol-statement) (generate-symbol-statement statement context)]
       [(eq? statement-type 'list-statement) (generate-list-statement statement context)]
+      [(eq? statement-type 'quote-statement) (generate-quote-statement statement context)]
       [else (error (format "[log] Error: Unknown statement type ~a" statement-type))])))
 
 ;

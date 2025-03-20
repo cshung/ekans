@@ -33,6 +33,8 @@ void create_nil_value(ekans_value** pReturn);
 
 void create_cons_cell(ekans_value* head, ekans_value* tail, ekans_value** pReturn);
 
+void create_nil(ekans_value** pReturn);
+
 // accessors
 
 void get_environment(ekans_value* env, int levels_up, int index, ekans_value** pReturn);
