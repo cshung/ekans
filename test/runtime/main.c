@@ -73,7 +73,6 @@ void test_create_cons_value() {
     create_nil_value(&b);
     create_cons_cell(a, b, &c);
     collect();
-    print_ekans_value(c);
     pop_stack_slot(1);
     assert(is(a, number));
     assert(is(b, nil));

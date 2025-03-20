@@ -213,7 +213,7 @@
           context)))
 
 (define (generate-quote-statement quote-statement context)
-  (list (format "  create_nil(&v~a);\n"
+  (list (format "  create_nil_value(&v~a);\n"
                 (new-variable-id context)) ; TODO, create the right value based on the quote-statement
         (new-variable-id context)
         (increment-variable-id context)
