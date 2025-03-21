@@ -212,12 +212,57 @@
           closure-id
           context)))
 
+(define (generate-list-statement-quoted list-statement context)
+  (let ([quoted-list-statement (cdr list-statement)]
+        [variable-id (new-variable-id context)]
+        [context (increment-variable-id context)])
+    (if (null? quoted-list-statement)
+        (list (format "  create_nil_value(&v~a);\n" variable-id) variable-id context)
+        (let* ([first-statement-result (generate-statement-quoted (car quoted-list-statement)
+                                                                  context)]
+               [first-statement-code (car first-statement-result)]
+               [first-statement-rest (cdr first-statement-result)]
+               [first-statement-variable (car first-statement-rest)]
+               [context (cadr first-statement-rest)]
+               [rest-statement-result (generate-list-statement-quoted
+                                       (cons 'list-statement (cdr quoted-list-statement))
+                                       context)]
+               [rest-statement-code (car rest-statement-result)]
+               [rest-statement-rest (cdr rest-statement-result)]
+               [rest-statement-variable (car rest-statement-rest)]
+               [context (cadr rest-statement-rest)]
+               [result-id (new-variable-id context)]
+               [context (increment-variable-id context)])
+          (list (string-append first-statement-code
+                               rest-statement-code
+                               (format "  create_cons_cell(v~a, v~a, &v~a);\n"
+                                       first-statement-variable
+                                       rest-statement-variable
+                                       result-id))
+                result-id
+                context)))))
+
+(define (generate-statement-quoted quoted-statement context)
+  (let* ([variable-id (new-variable-id context)]
+         [context (increment-variable-id context)]
+         [quoted-statement-type (car quoted-statement)])
+    (cond
+      [(eq? quoted-statement-type 'number-statement)
+       (list (format "  create_number_value(~a, &v~a);\n" (cdr quoted-statement) variable-id)
+             variable-id
+             context)]
+      [(eq? quoted-statement-type 'bool-statement)
+       (list (format "  create_boolean_value(~a, &v~a);\n"
+                     (if (cdr quoted-statement) "true" "false")
+                     variable-id)
+             variable-id
+             context)]
+      [(eq? quoted-statement-type 'list-statement)
+       (generate-list-statement-quoted quoted-statement context)]
+      [else (error (format "[log] Error: Unknown statement type ~a" quoted-statement-type))])))
+
 (define (generate-quote-statement quote-statement context)
-  (list (format "  create_nil_value(&v~a);\n"
-                (new-variable-id context)) ; TODO, create the right value based on the quote-statement
-        (new-variable-id context)
-        (increment-variable-id context)
-        context))
+  (generate-statement-quoted (cdr quote-statement) context))
 
 ;
 ; This function generates the code for any statements, it just dispatches the statement to the appropriate function
