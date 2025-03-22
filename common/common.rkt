@@ -7,10 +7,14 @@
 (define rp #\))
 (define lb "{")
 (define rb "}")
+(define ls #\[)
+(define rs #\])
 (define empty-string "")
 
 (provide lp
          lb
          rp
          rb
+         ls
+         rs
          empty-string)

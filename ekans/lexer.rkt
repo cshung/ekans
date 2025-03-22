@@ -28,7 +28,7 @@
         (digits-to-number (cdr lst) (+ (* acc 10) (- digit 48))))))
 
 (define (token-end? suffix)
-  (or (null? suffix) (member (car suffix) '(#\space #\newline #\( #\)))))
+  (or (null? suffix) (member (car suffix) '(#\space #\newline #\( #\) #\[ #\]))))
 
 (define (skip-comment input)
   (if (or (null? input) (equal? (car input) #\newline))
@@ -102,6 +102,8 @@
                 [(equal? peek #\newline) (lexer (cdr input))]
                 [(equal? peek lp) (cons (cons 'lparen '()) (cdr input))]
                 [(equal? peek rp) (cons (cons 'rparen '()) (cdr input))]
+                [(equal? peek ls) (cons (cons 'lparen '()) (cdr input))]
+                [(equal? peek rs) (cons (cons 'rparen '()) (cdr input))]
                 [(equal? peek #\') (cons (cons 'quote '()) (cdr input))]
                 [(digit? peek)
                  (let ([number-result (take-while input digit?)])

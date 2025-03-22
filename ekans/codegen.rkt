@@ -120,6 +120,9 @@
       [(and (equal? (caar list-statement-list) 'symbol-statement)
             (equal? (cdar list-statement-list) "lambda"))
        (generate-lambda list-statement-list context)]
+      [(and (equal? (caar list-statement-list) 'symbol-statement)
+            (equal? (cdar list-statement-list) "let"))
+       (generate-let list-statement-list context)]
       ; TODO, handle if,and,or
       ; we cannot treat them as function - if we do, we will always evaluate all branches, which is not
       ; the way it should be
@@ -260,6 +263,19 @@
       [(eq? quoted-statement-type 'list-statement)
        (generate-list-statement-quoted quoted-statement context)]
       [else (error (format "[log] Error: Unknown statement type ~a" quoted-statement-type))])))
+;
+; Generate a let statement by transforming it into an application of a lambda function
+;
+(define (generate-let list-statement-list context)
+  (let* ([bindings (cdadr list-statement-list)]
+         [symbols (map cadr bindings)]
+         [values (map caddr bindings)]
+         [body (cddr list-statement-list)]
+         [lambda (cons 'list-statement
+                       (cons (cons 'symbol-statement "lambda")
+                             (cons (cons 'list-statement symbols) body)))]
+         [application (cons 'list-statement (cons lambda values))])
+    (generate-statement application context)))
 
 (define (generate-quote-statement quote-statement context)
   (generate-statement-quoted (cdr quote-statement) context))
