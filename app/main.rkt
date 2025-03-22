@@ -3,9 +3,12 @@
 
 #lang racket
 
-(require "../ekans/lexer.rkt")
 (require "../ekans/parser.rkt")
 (require "../ekans/codegen.rkt")
+
+(define (read-file filename)
+  (call-with-input-file filename
+                        (lambda (port) (let ([content (port->string port)]) (string->list content)))))
 
 (define (compiler input-file output-file)
   (define input (read-file input-file))

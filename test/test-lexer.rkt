@@ -47,6 +47,17 @@
  (test-case "Test Operator Multiplication"
    (check-equal? (lexer (string->list "* 1 2")) (cons (cons 'symbol "*") (string->list " 1 2"))))
  (test-case "Test Operator Division"
-   (check-equal? (lexer (string->list "/ 1 2")) (cons (cons 'symbol "/") (string->list " 1 2")))))
+   (check-equal? (lexer (string->list "/ 1 2")) (cons (cons 'symbol "/") (string->list " 1 2"))))
+ (test-case "Test character"
+   ; Input: "#\\a"
+   ; Breakdown:
+   ;   1. #\# -> #
+   ;   2. #\\ -> \
+   ;   3. #\a -> a
+   ; Expected Output: (# \ a)
+   ; (displayln (string-append "[log][test-lexer] " (format "~a" (string->list "#\\a"))))
+   (check-equal? (lexer (string->list "#\\a")) (cons (cons 'character #\a) '())))
+ ; add more test cases here
+ )
 
 (run-tests test-lexer)

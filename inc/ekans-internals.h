@@ -11,6 +11,7 @@
 typedef enum {
   number,
   boolean,
+  character,
   environment,
   closure,
   nil,
@@ -38,6 +39,7 @@ struct ekans_value {
   union {
     int               n;
     bool              b;
+    char              a;
     ekans_environment e;
     ekans_closure     c;
     ekans_cons        l;

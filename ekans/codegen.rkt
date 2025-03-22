@@ -83,6 +83,12 @@
           variable-id
           context)))
 
+(define (generate-char-statement char-statement context)
+  (let ([char-value (cdr char-statement)]
+        [variable-id (new-variable-id context)]
+        [context (increment-variable-id context)])
+    (list (format "  create_char_value('~a', &v~a);\n" char-value variable-id) variable-id context)))
+
 ;
 ; A symbol statement means at runtime, this statement will be evaluated to a variable value, and this
 ; is achieved by mirroring all the available symbols in both the compiler and the runtime.
@@ -289,6 +295,7 @@
     (cond
       [(eq? statement-type 'number-statement) (generate-number-statement statement context)]
       [(eq? statement-type 'bool-statement) (generate-bool-statement statement context)]
+      [(eq? statement-type 'char-statement) (generate-char-statement statement context)]
       [(eq? statement-type 'symbol-statement) (generate-symbol-statement statement context)]
       [(eq? statement-type 'list-statement) (generate-list-statement statement context)]
       [(eq? statement-type 'quote-statement) (generate-quote-statement statement context)]

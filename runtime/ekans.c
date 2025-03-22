@@ -57,6 +57,14 @@ void create_boolean_value(bool v, ekans_value** pReturn) {
   append(result);
 }
 
+void create_char_value(char v, ekans_value** pReturn) {
+  ekans_value* result = brutal_malloc(sizeof(ekans_value));
+  result->type        = character;
+  result->value.a     = v;
+  *pReturn            = result;
+  append(result);
+}
+
 void create_environment(ekans_value* parent, const int size, ekans_value** pReturn) {
   assert(parent == NULL || is(parent, environment));
   ekans_value* result           = brutal_malloc(sizeof(ekans_value));
@@ -252,6 +260,9 @@ void print_ekans_value_helper(ekans_value* v) {
           assert(!"print_ekans_value: unknown boolean value");
         } break;
       }
+    } break;
+    case character: {
+      printf("#\\%c", v->value.a);
     } break;
     case cons: {
       printf("'(");

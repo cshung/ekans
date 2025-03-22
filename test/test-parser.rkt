@@ -63,6 +63,13 @@
                  (cons (list (cons 'list-statement
                                    (list (cons 'number-statement 123)
                                          (cons 'list-statement (list (cons 'number-statement 234))))))
-                       '()))))
+                       '())))
+ (test-case "Test Character Statement"
+   ; (displayln (string-append "[log][test-parser] Input: " (format "~a" (string->list "#\\a"))))
+   ; (displayln (string-append "[log][test-parser] Expected output: "
+   ;                           (format "~a" (cons (cons 'char-statement #\a) '()))))
+   (check-equal? (parse-statement (string->list "#\\a")) (cons (cons 'char-statement #\a) '())))
+ ; add more test cases here
+ )
 
 (run-tests test-parser)

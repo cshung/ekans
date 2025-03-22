@@ -58,7 +58,6 @@
 ;          as a statement, 'error will be returned
 ;
 (define (parse-statement input)
-
   (let* ([first-lex (lexer input)]
          [first-token (car first-lex)]
          [first-rest (cdr first-lex)]
@@ -66,6 +65,7 @@
     (cond
       [(eq? first-token-type 'number) (cons (cons 'number-statement (cdr first-token)) first-rest)]
       [(eq? first-token-type 'bool) (cons (cons 'bool-statement (cdr first-token)) first-rest)]
+      [(eq? first-token-type 'character) (cons (cons 'char-statement (cdr first-token)) first-rest)]
       [(eq? first-token-type 'symbol) (cons (cons 'symbol-statement (cdr first-token)) first-rest)]
       [(eq? first-token-type 'lparen) (parse-list-statement input)]
       [(eq? first-token-type 'quote) (parse-quote-statement input)]
