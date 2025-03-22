@@ -120,6 +120,12 @@
                        (cons (cons 'number (digits-to-number (car number-result) 0))
                              (cdr number-result))
                        (cons (cons 'unknown '()) '())))]
+                ; String
+                [(equal? peek #\")
+                 (let ([string-result (take-while (cdr input) (lambda (c) (not (equal? c #\"))))])
+                   (if (token-end? (cddr string-result))
+                       (cons (cons 'string (list->string (car string-result))) (cddr string-result))
+                       (cons (cons 'unknown '()) '())))]
                 ; Symbol
                 [else
                  (let* ([symbol-result (take-while input (lambda (c) (not (token-end? (list c)))))]

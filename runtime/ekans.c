@@ -6,6 +6,7 @@
 #include <ekans.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <limits.h>
 
 //
@@ -62,6 +63,16 @@ void create_char_value(char v, ekans_value** pReturn) {
   result->type        = character;
   result->value.a     = v;
   *pReturn            = result;
+  append(result);
+}
+
+void create_string_value(char* s, ekans_value** pReturn) {
+  ekans_value* result = brutal_malloc(sizeof(ekans_value));
+  result->type        = string;
+  result->value.s     = brutal_malloc(strlen(s) + 1);
+  strncpy(result->value.s, s, strlen(s) + 1); // safer string copy
+  result->value.s[strlen(s)] = '\0';          // Ensure null termination
+  *pReturn                   = result;
   append(result);
 }
 
@@ -147,6 +158,9 @@ void sweep() {
     } else {
       if (is(cur, environment)) {
         brutal_free(cur->value.e.bindings);
+      }
+      if (is(cur, string)) {
+        brutal_free(cur->value.s);
       }
       // freed += 1;
       cur->prev->next = cur->next;
@@ -263,6 +277,9 @@ void print_ekans_value_helper(ekans_value* v) {
     } break;
     case character: {
       printf("#\\%c", v->value.a);
+    } break;
+    case string: {
+      printf("\"%s\"", v->value.s);
     } break;
     case cons: {
       printf("'(");
