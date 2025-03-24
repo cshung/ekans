@@ -34,11 +34,11 @@
 (define (symbol-table context)
   (caddr context))
 
-(define (enqueue-pending-function id body context)
+(define (enqueue-pending-function id body function-context context)
   (list (car context) ; variable unchanged
         (cadr context) ; num function unchanged
         (caddr context) ; symbol table unchanged
-        (cons (list id body context) (cadddr context))))
+        (cons (list id body function-context) (cadddr context))))
 
 (define (pending-functions context)
   (cadddr context))

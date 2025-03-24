@@ -137,6 +137,9 @@
       [(and (equal? (caar list-statement-list) 'symbol-statement)
             (equal? (cdar list-statement-list) "let"))
        (generate-let list-statement-list context)]
+      [(and (equal? (caar list-statement-list) 'symbol-statement)
+            (equal? (cdar list-statement-list) "let*"))
+       (generate-let-star list-statement-list context)]
       ; TODO, handle if,and,or
       ; we cannot treat them as function - if we do, we will always evaluate all branches, which is not
       ; the way it should be
@@ -222,7 +225,7 @@
                             new-symbol-table
                             '() ; list of pending functions for the new function
                             )]
-         [context (enqueue-pending-function new-function-id function-body new-context)]
+         [context (enqueue-pending-function new-function-id function-body new-context context)]
          [closure-id (new-variable-id context)]
          [context (increment-variable-id context)])
     (list (format "  create_closure(env, f~a, &v~a);\n" new-function-id closure-id)
@@ -290,6 +293,23 @@
                              (cons (cons 'list-statement symbols) body)))]
          [application (cons 'list-statement (cons lambda values))])
     (generate-statement application context)))
+
+;
+; Generate a let* statement by transforming it into a series of let statements
+;
+(define (generate-let-star list-statement-list context)
+  (let* ([bindings (cdadr list-statement-list)]
+         [body (cddr list-statement-list)])
+    (if (null? bindings)
+        (generate-statements body context '())
+        (let* ([binding-head (car bindings)]
+               [binding-tail (cdr bindings)]
+               [head-binding (list 'list-statement binding-head)]
+               [tail-binding (cons 'list-statement binding-tail)]
+               [inner (append (list 'list-statement (cons 'symbol-statement "let*") tail-binding)
+                              body)]
+               [outer (list 'list-statement (cons 'symbol-statement "let") head-binding inner)])
+          (generate-statement outer context)))))
 
 (define (generate-quote-statement quote-statement context)
   (generate-statement-quoted (cdr quote-statement) context))
