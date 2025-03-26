@@ -114,7 +114,11 @@
          [lookup-result (lookup symbol-value (symbol-table context) 0)]
          [level (car lookup-result)]
          [index (cadr lookup-result)])
-    (list (format "  get_environment(env, ~a, ~a, &v~a);\n" level index variable-id)
+    (list (format "  // looking up the value for ~a\n  get_environment(env, ~a, ~a, &v~a);\n"
+                  symbol-value
+                  level
+                  index
+                  variable-id)
           variable-id
           context)))
 
@@ -219,6 +223,7 @@
       function-code
       (format "  closure_of(v~a, &v~a);" function-id closure-id)
       "\n"
+      (format "  // preparing environment with ~a slots for call\n" (length arguments))
       (format "  create_environment(v~a, ~a, &v~a);" closure-id (length arguments) environment-id)
       "\n"
       argument-code
@@ -438,7 +443,9 @@
                    [generate-statements-rest (cdr generate-statements-result)]
                    [generate-statements-result
                     (cons
-                     (string-append (format "  create_environment(env, ~a, &v~a);\n  env = v~a;\n"
+                     (string-append (format "/* Adding defines here:\n~a*/\n"
+                                            (pretty-symbol-table (symbol-table context)))
+                                    (format "  create_environment(env, ~a, &v~a);\n  env = v~a;\n"
                                             (length define-names)
                                             environment-id
                                             environment-id)
@@ -508,18 +515,26 @@
              [rest-count (cdr rest-result)])
         (cons (string-append function-code rest-code) (+ rest-count 1)))))
 
+(define (pretty-symbol-table table)
+  (if (null? table)
+      ""
+      (format "~a\n~a" (car table) (pretty-symbol-table (cdr table)))))
+
 ;
 ; This function generates the code for a single function.
 ; It starts with generating all the variable declarations, then generates the code for the statements,
 ; and finally generates the code to return the result of the function.
 ;
 (define (generate-function function-id statements context)
-  (let* ([statements-result (generate-statements statements context '())]
+  (let* ([original-context context]
+         [statements-result (generate-statements statements context '())]
          [statements-code (car statements-result)]
          [statements-variable (cadr statements-result)]
          [context (caddr statements-result)]
          [number-of-variables (number-of-variables context)])
-    (cons (string-append (format "void f~a(ekans_value* env, ekans_value** pReturn) " function-id)
+    (cons (string-append (format "/*\nThe symbol table for this function is:\n~a*/\n"
+                                 (pretty-symbol-table (symbol-table original-context)))
+                         (format "void f~a(ekans_value* env, ekans_value** pReturn) " function-id)
                          lb
                          "\n"
                          (generate-temp-declarations number-of-variables)
