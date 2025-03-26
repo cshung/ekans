@@ -17,8 +17,8 @@
     ("=" "equals") ; void equals(ekans_value* environment, ekans_value** pReturn);
     ))
 
-(define (initial-symbol-table defines)
-  (cons (map car defines) (cons (map car builtins) '())))
+(define (initial-symbol-table)
+  (cons (map car builtins) '()))
 
 (define (last-index-of l target current index)
   (if (null? l)
@@ -31,7 +31,7 @@
 
 (define (lookup symbol table level)
   (if (null? table)
-      '()
+      (error (format "Symbol '~a' is not found" symbol))
       (let ([result (last-index-of (car table) symbol '() 0)])
         (if (null? result)
             (lookup symbol (cdr table) (+ level 1))

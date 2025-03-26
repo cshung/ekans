@@ -226,6 +226,10 @@ void get_environment(ekans_value* env, int levels_up, int index, ekans_value** p
   }
 
   assert(index < env->value.e.binding_count);
+  if (env->value.e.bindings[index] == NULL) {
+    fprintf(stderr, "accessing a definition before evaluation\n");
+    exit(1);
+  }
   *pReturn = env->value.e.bindings[index];
 }
 

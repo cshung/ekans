@@ -180,7 +180,7 @@
       [(and (equal? (caar list-statement-list) 'symbol-statement)
             (equal? (cdar list-statement-list) "let*"))
        (generate-let-star list-statement-list context)]
-      ; TODO, handle if,and,or
+      ; TODO, handle and,or
       [(and (equal? (caar list-statement-list) 'symbol-statement)
             (equal? (cdar list-statement-list) "if"))
        (generate-if-statement list-statement-list context)]
@@ -371,7 +371,27 @@
       [(eq? statement-type 'symbol-statement) (generate-symbol-statement statement context)]
       [(eq? statement-type 'list-statement) (generate-list-statement statement context)]
       [(eq? statement-type 'quote-statement) (generate-quote-statement statement context)]
+      [(eq? statement-type 'set-environment) (generate-set-environment-statement statement context)]
       [else (error (format "[log] Error: Unknown statement type ~a" statement-type))])))
+
+(define (generate-set-environment-statement statement context)
+  (let* ([expression (cadr statement)]
+         [index (caddr statement)]
+         [expression-result (generate-statement expression context)]
+         [expression-code (car expression-result)]
+         [expression-rest (cdr expression-result)]
+         [expression-var (car expression-rest)]
+         [expression-code
+          (string-append expression-code
+                         (format "  set_environment(env, ~a, v~a);\n" index expression-var))]
+         [expression-result (cons expression-code expression-rest)])
+    expression-result))
+
+(define (set-environment values counter)
+  (if (null? values)
+      '()
+      (cons (list 'set-environment (car values) counter)
+            (set-environment (cdr values) (+ counter 1)))))
 
 ;
 ; This function generates the code for a list of statements.
@@ -386,20 +406,46 @@
   ; (displayln (format "[log] generate-statements: statements = ~a" statements))
   (if (null? statements)
       (list empty-string result context)
-      (let* ([first-statement-result (generate-statement (car statements) context)]
-             [first-statement-code (car first-statement-result)]
-             [first-statement-rest (cdr first-statement-result)]
-             [first-statement-variable (car first-statement-rest)]
-             [context (cadr first-statement-rest)]
-             [rest-statement-result
-              (generate-statements (cdr statements) context first-statement-variable)]
-             [rest-statement-code (car rest-statement-result)]
-             [rest-statement-rest (cdr rest-statement-result)]
-             [rest-statement-variable (car rest-statement-rest)]
-             [context (cadr rest-statement-rest)])
-        (list (string-append first-statement-code generate-collect-statement rest-statement-code)
-              rest-statement-variable
-              context))))
+      (let ([defines (extract-defines statements)])
+        (if (null? (car defines))
+            (let* ([first-statement-result (generate-statement (car statements) context)]
+                   [first-statement-code (car first-statement-result)]
+                   [first-statement-rest (cdr first-statement-result)]
+                   [first-statement-variable (car first-statement-rest)]
+                   [context (cadr first-statement-rest)]
+                   [rest-statement-result
+                    (generate-statements (cdr statements) context first-statement-variable)]
+                   [rest-statement-code (car rest-statement-result)]
+                   [rest-statement-rest (cdr rest-statement-result)]
+                   [rest-statement-variable (car rest-statement-rest)]
+                   [context (cadr rest-statement-rest)])
+              (list
+               (string-append first-statement-code generate-collect-statement rest-statement-code)
+               rest-statement-variable
+               context))
+            (let* ([define-names (car defines)]
+                   [define-values (cdr defines)]
+                   [context (push-symbols define-names context)]
+                   [environment-id (new-variable-id context)]
+                   [context (increment-variable-id context)]
+                   [define-result
+                    (generate-statements (set-environment define-values 0) context result)]
+                   [define-code (car define-result)]
+                   [context (caddr define-result)]
+                   [generate-statements-result
+                    (generate-statements (filter not-define? statements) context result)]
+                   [generate-statements-code (car generate-statements-result)]
+                   [generate-statements-rest (cdr generate-statements-result)]
+                   [generate-statements-result
+                    (cons
+                     (string-append (format "  create_environment(env, ~a, &v~a);\n  env = v~a;\n"
+                                            (length define-names)
+                                            environment-id
+                                            environment-id)
+                                    define-code
+                                    generate-statements-code)
+                     generate-statements-rest)])
+              generate-statements-result)))))
 
 ;
 ; At this point, we have done with the various generate-statements functions
@@ -486,12 +532,42 @@
                          "\n")
           context)))
 
+(define (define? statement)
+  (and ;
+   (equal? (car statement) 'list-statement)
+   (equal? (caadr statement) 'symbol-statement)
+   (equal? (cdadr statement) "define")))
+
+(define (not-define? statement)
+  (not (define? statement)))
+
+(define (define-name statement)
+  (let ([third (caddr statement)])
+    (if (equal? (car third) 'symbol-statement)
+        (cdr third)
+        (cdadr third))))
+
+(define (define-value statement)
+  (let ([third (caddr statement)]
+        [tail (cdddr statement)])
+    (if (equal? (car third) 'symbol-statement)
+        (car tail)
+        (append
+         (list 'list-statement (cons 'symbol-statement "lambda") (cons 'list_statement (cddr third)))
+         tail))))
+
+(define (extract-defines statements)
+  (let* ([defines (filter define? statements)]
+         [names (map define-name defines)]
+         [values (map define-value defines)])
+    (cons names values)))
+
 ;
 ; This function generates everything for the whole program
 ; It starts with the prologue, then generates all the functions, and finally generates the epilogue.
 ;
 (define (generate-all-code statements)
-  (let* ([initial-queue (list (list 1 statements (initial-context '())))]
+  (let* ([initial-queue (list (list 1 statements (initial-context)))]
          [all-function-result (generate-all-functions initial-queue)]
          [all-function-code (car all-function-result)]
          [all-function-count (cdr all-function-result)])
@@ -499,7 +575,7 @@
 
 ;
 ; This helper function generates the code to populate the environment with the elements
-; This is used in the generate-build-defines and generate-build-builtins functions.
+; This is used in the generate-build-builtins functions.
 ;
 (define (populate-environment elements index temp-id)
   (if (null? elements)
@@ -528,78 +604,51 @@
                  "\n"))
 
 ;
-; This function generates the code to build the environment for the defines at runtime.
-; It is similar to the generate-build-builtins function, but it uses the defines instead of the builtins.
-; The defines are passed as an argument to the function.
-;
-(define (generate-build-defines defines)
-  (string-append "\n"
-                 "void build_defines(ekans_value** pEnv) "
-                 lb
-                 "\n"
-                 "  ekans_value* builtins = NULL;"
-                 "\n"
-                 "  push_stack_slot(&builtins);"
-                 "\n"
-                 "  build_builtins(&builtins);"
-                 "\n"
-                 (format "  create_environment(builtins, ~a, pEnv);" (length defines))
-                 "\n"
-                 (generate-temp-declarations (length defines))
-                 (populate-environment defines 0 1)
-                 (format "  pop_stack_slot(~a);" (+ (length defines) 1))
-                 "\n"
-                 rb
-                 "\n"))
-
-;
 ; This function generates the epilogue for the generated code.
 ; It includes the code to initialize and finalize the ekans runtime, and the main function.
-; The main function initializes the ekans runtime, creates an environment, and calls the build_defines function.
+; The main function initializes the ekans runtime, creates an environment, and calls the build_builtins function.
 ; It also calls the f1 function with the environment and prints the result.
 ;
 (define (epilogue)
-  (string-append
-   (generate-build-builtins)
-   (generate-build-defines '()) ; TODO: this should be the actual functions defined in the program
-   (string-append "\n"
-                  "int main(int argc, char** argv) "
-                  lb
-                  "\n"
-                  "  initialize_ekans();"
-                  "\n"
-                  "  ekans_value* env = NULL;"
-                  "\n"
-                  "  push_stack_slot(&env);"
-                  "\n"
-                  "  ekans_value* v1 = NULL;"
-                  "\n"
-                  "  push_stack_slot(&v1);"
-                  "\n"
-                  "  build_defines(&env);"
-                  "\n"
-                  "  f1(env, &v1);"
-                  "\n"
-                  "  print_ekans_value(v1);"
-                  "\n"
-                  "  pop_stack_slot(2);"
-                  "\n"
-                  "  finalize_ekans();"
-                  "\n"
-                  "  return 0;"
-                  "\n"
-                  rb
-                  "\n")))
+  (string-append (generate-build-builtins)
+                 (string-append "\n"
+                                "int main(int argc, char** argv) "
+                                lb
+                                "\n"
+                                "  initialize_ekans();"
+                                "\n"
+                                "  ekans_value* env = NULL;"
+                                "\n"
+                                "  push_stack_slot(&env);"
+                                "\n"
+                                "  ekans_value* v1 = NULL;"
+                                "\n"
+                                "  push_stack_slot(&v1);"
+                                "\n"
+                                "  build_builtins(&env);"
+                                "\n"
+                                "  f1(env, &v1);"
+                                "\n"
+                                "  print_ekans_value(v1);"
+                                "\n"
+                                "  pop_stack_slot(2);"
+                                "\n"
+                                "  finalize_ekans();"
+                                "\n"
+                                "  return 0;"
+                                "\n"
+                                rb
+                                "\n")))
 
 ;
 ; This function generates the initial context for the program.
 ; It initializes the number of variables and functions to 0, and creates an symbol table corresponding to the defines and builtins.
 ; This makes sure the symbol table is always in sync with the runtime environment.
 ;
-(define (initial-context defines)
+(define (initial-context)
   (list 0 ; number of variables
         1 ; number of functions
-        (initial-symbol-table defines)
+        (initial-symbol-table)
         '() ; list of pending functions to generate
         ))
 

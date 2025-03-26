@@ -12,6 +12,7 @@
 (provide symbol-table)
 (provide enqueue-pending-function)
 (provide pending-functions)
+(provide push-symbols)
 
 (define (new-variable-id context)
   (+ (car context) 1))
@@ -33,6 +34,13 @@
 
 (define (symbol-table context)
   (caddr context))
+
+(define (push-symbols symbols context)
+  (list (car context) ; variable unchanged
+        (cadr context) ; num function unchanged
+        (cons symbols (caddr context)) ; pushing the symbols into the symbol table
+        (cadddr context) ; pending functions unchanged
+        ))
 
 (define (enqueue-pending-function id body function-context context)
   (list (car context) ; variable unchanged
