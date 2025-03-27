@@ -17,6 +17,7 @@ typedef enum {
   closure,
   nil,
   cons,
+  symbol,
 } ekans_type;
 
 typedef struct ekans_environment {

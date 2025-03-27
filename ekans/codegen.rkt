@@ -327,7 +327,11 @@
              context)]
       [(eq? quoted-statement-type 'list-statement)
        (generate-list-statement-quoted quoted-statement context)]
-      [else (error (format "[log] Error: Unknown statement type ~a" quoted-statement-type))])))
+      [(eq? quoted-statement-type 'symbol-statement)
+       (list (format "  create_symbol_value(\"~a\", &v~a);\n" (cdr quoted-statement) variable-id)
+             variable-id
+             context)]
+      [else (error (format "[log] Error: Unknown quoted statement type ~a" quoted-statement-type))])))
 ;
 ; Generate a let statement by transforming it into an application of a lambda function
 ;

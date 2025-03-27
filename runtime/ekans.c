@@ -70,8 +70,18 @@ void create_string_value(char* s, ekans_value** pReturn) {
   ekans_value* result = brutal_malloc(sizeof(ekans_value));
   result->type        = string;
   result->value.s     = brutal_malloc(strlen(s) + 1);
-  strncpy(result->value.s, s, strlen(s) + 1); // safer string copy
-  result->value.s[strlen(s)] = '\0';          // Ensure null termination
+  strncpy(result->value.s, s, strlen(s) + 1);
+  result->value.s[strlen(s)] = '\0';
+  *pReturn                   = result;
+  append(result);
+}
+
+void create_symbol_value(char* s, ekans_value** pReturn) {
+  ekans_value* result = brutal_malloc(sizeof(ekans_value));
+  result->type        = symbol;
+  result->value.s     = brutal_malloc(strlen(s) + 1);
+  strncpy(result->value.s, s, strlen(s) + 1);
+  result->value.s[strlen(s)] = '\0';
   *pReturn                   = result;
   append(result);
 }
@@ -159,7 +169,7 @@ void sweep() {
       if (is(cur, environment)) {
         brutal_free(cur->value.e.bindings);
       }
-      if (is(cur, string)) {
+      if (is(cur, string) || is(cur, symbol)) {
         brutal_free(cur->value.s);
       }
       // freed += 1;
@@ -281,6 +291,9 @@ void print_ekans_value_helper(ekans_value* v) {
     } break;
     case character: {
       printf("#\\%c", v->value.a);
+    } break;
+    case symbol: {
+      printf("'%s", v->value.s);
     } break;
     case string: {
       printf("\"%s\"", v->value.s);

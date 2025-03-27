@@ -29,6 +29,8 @@ void create_char_value(char v, ekans_value** pReturn);
 
 void create_string_value(char* s, ekans_value** pReturn);
 
+void create_symbol_value(char* s, ekans_value** pReturn);
+
 void create_environment(ekans_value* parent, const int size, ekans_value** pReturn);
 
 void create_closure(ekans_value* closure, ekans_function function, ekans_value** pReturn);
