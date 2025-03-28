@@ -10,6 +10,11 @@
 (provide generate-all-code)
 (provide generate-file)
 
+(define show-comment #t)
+
+(define (optional-comment comment)
+  (if show-comment comment ""))
+
 ;
 ; This function generates the function prototypes for all generated functions.
 ; This allow us not to worry about the order of the functions in the file.
@@ -114,11 +119,8 @@
          [lookup-result (lookup symbol-value (symbol-table context) 0)]
          [level (car lookup-result)]
          [index (cadr lookup-result)])
-    (list (format "  // looking up the value for ~a\n  get_environment(env, ~a, ~a, &v~a);\n"
-                  symbol-value
-                  level
-                  index
-                  variable-id)
+    (list (string-append (optional-comment (format "  // looking up the value for ~a\n" symbol-value))
+                         (format "  get_environment(env, ~a, ~a, &v~a);\n" level index variable-id))
           variable-id
           context)))
 
@@ -223,7 +225,8 @@
       function-code
       (format "  closure_of(v~a, &v~a);" function-id closure-id)
       "\n"
-      (format "  // preparing environment with ~a slots for call\n" (length arguments))
+      (optional-comment (format "  // preparing environment with ~a slots for call\n"
+                                (length arguments)))
       (format "  create_environment(v~a, ~a, &v~a);" closure-id (length arguments) environment-id)
       "\n"
       argument-code
@@ -446,16 +449,16 @@
                    [generate-statements-code (car generate-statements-result)]
                    [generate-statements-rest (cdr generate-statements-result)]
                    [generate-statements-result
-                    (cons
-                     (string-append (format "/* Adding defines here:\n~a*/\n"
-                                            (pretty-symbol-table (symbol-table context)))
-                                    (format "  create_environment(env, ~a, &v~a);\n  env = v~a;\n"
-                                            (length define-names)
-                                            environment-id
-                                            environment-id)
-                                    define-code
-                                    generate-statements-code)
-                     generate-statements-rest)])
+                    (cons (string-append
+                           (optional-comment (format "/* Adding defines here:\n~a*/\n"
+                                                     (pretty-symbol-table (symbol-table context))))
+                           (format "  create_environment(env, ~a, &v~a);\n  env = v~a;\n"
+                                   (length define-names)
+                                   environment-id
+                                   environment-id)
+                           define-code
+                           generate-statements-code)
+                          generate-statements-rest)])
               generate-statements-result)))))
 
 ;
@@ -536,20 +539,21 @@
          [statements-variable (cadr statements-result)]
          [context (caddr statements-result)]
          [number-of-variables (number-of-variables context)])
-    (cons (string-append (format "/*\nThe symbol table for this function is:\n~a*/\n"
-                                 (pretty-symbol-table (symbol-table original-context)))
-                         (format "void f~a(ekans_value* env, ekans_value** pReturn) " function-id)
-                         lb
-                         "\n"
-                         (generate-temp-declarations number-of-variables)
-                         statements-code
-                         (format "  *pReturn = v~a;" statements-variable)
-                         "\n"
-                         (format "  pop_stack_slot(~a);" number-of-variables)
-                         "\n"
-                         rb
-                         "\n")
-          context)))
+    (cons
+     (string-append (optional-comment (format "/*\nThe symbol table for this function is:\n~a*/\n"
+                                              (pretty-symbol-table (symbol-table original-context))))
+                    (format "void f~a(ekans_value* env, ekans_value** pReturn) " function-id)
+                    lb
+                    "\n"
+                    (generate-temp-declarations number-of-variables)
+                    statements-code
+                    (format "  *pReturn = v~a;" statements-variable)
+                    "\n"
+                    (format "  pop_stack_slot(~a);" number-of-variables)
+                    "\n"
+                    rb
+                    "\n")
+     context)))
 
 (define (define? statement)
   (and ;
