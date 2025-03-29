@@ -10,10 +10,25 @@
 (provide generate-all-code)
 (provide generate-file)
 
+;
+; Turn this on to show the symbol tables as comments in the generated code
+; This is useful to debug the symbol table generation
+;
 (define show-comment #t)
+
+;
+; Turn this on to generate a collect statement after each statement
+; This is useful to stress test the garbage collector
+;
+(define gc-stress #f)
 
 (define (optional-comment comment)
   (if show-comment comment ""))
+
+(define (optional-collect)
+  (if gc-stress
+      (generate-collect-statement)
+      ""))
 
 ;
 ; This function generates the function prototypes for all generated functions.
@@ -45,7 +60,8 @@
 ;
 ; This function generate a call to the collect function.
 ;
-(define generate-collect-statement "  collect();\n")
+(define (generate-collect-statement)
+  "  collect();\n")
 
 ;
 ; These functions generate the code for different types of statements.
@@ -73,7 +89,8 @@
   (let ([number-value (cdr number-statement)]
         [variable-id (new-variable-id context)]
         [context (increment-variable-id context)])
-    (list (format "  create_number_value(~a, &v~a);\n" number-value variable-id)
+    (list (string-append (format "  create_number_value(~a, &v~a);\n" number-value variable-id)
+                         (optional-collect))
           variable-id
           context)))
 
@@ -84,7 +101,9 @@
   (let ([bool-value (cdr bool-statement)]
         [variable-id (new-variable-id context)]
         [context (increment-variable-id context)])
-    (list (format "  create_boolean_value(~a, &v~a);\n" (if bool-value "true" "false") variable-id)
+    (list (string-append
+           (format "  create_boolean_value(~a, &v~a);\n" (if bool-value "true" "false") variable-id)
+           (optional-collect))
           variable-id
           context)))
 
@@ -92,13 +111,17 @@
   (let ([char-value (cdr char-statement)]
         [variable-id (new-variable-id context)]
         [context (increment-variable-id context)])
-    (list (format "  create_char_value('~a', &v~a);\n" char-value variable-id) variable-id context)))
+    (list (string-append (format "  create_char_value('~a', &v~a);\n" char-value variable-id)
+                         (optional-collect))
+          variable-id
+          context)))
 
 (define (generate-string-statement string-statement context)
   (let ([string-value (cdr string-statement)]
         [variable-id (new-variable-id context)]
         [context (increment-variable-id context)])
-    (list (format "  create_string_value(\"~a\", &v~a);\n" string-value variable-id)
+    (list (string-append (format "  create_string_value(\"~a\", &v~a);\n" string-value variable-id)
+                         (optional-collect))
           variable-id
           context)))
 
@@ -120,7 +143,8 @@
          [level (car lookup-result)]
          [index (cadr lookup-result)])
     (list (string-append (optional-comment (format "  // looking up the value for ~a\n" symbol-value))
-                         (format "  get_environment(env, ~a, ~a, &v~a);\n" level index variable-id))
+                         (format "  get_environment(env, ~a, ~a, &v~a);\n" level index variable-id)
+                         (optional-collect))
           variable-id
           context)))
 
@@ -157,10 +181,13 @@
                          (format "  if (is_true(v~a)) {\n" condition-variable)
                          (format "  ~a" then-code)
                          (format "    v~a = v~a;\n" result-id then-variable)
+                         (optional-collect)
                          (format "  } else {\n")
                          (format "  ~a" else-code)
                          (format "    v~a = v~a;\n" result-id else-variable)
-                         (format "  }\n"))
+                         (optional-collect)
+                         (format "  }\n")
+                         (optional-collect))
           result-id
           context)))
 
@@ -223,15 +250,15 @@
     (list
      (string-append
       function-code
-      (format "  closure_of(v~a, &v~a);" function-id closure-id)
-      "\n"
+      (format "  closure_of(v~a, &v~a);\n" function-id closure-id)
+      (optional-collect)
       (optional-comment (format "  // preparing environment with ~a slots for call\n"
                                 (length arguments)))
-      (format "  create_environment(v~a, ~a, &v~a);" closure-id (length arguments) environment-id)
-      "\n"
+      (format "  create_environment(v~a, ~a, &v~a);\n" closure-id (length arguments) environment-id)
+      (optional-collect)
       argument-code
-      (format "  function_of(v~a)(v~a, &v~a);" function-id environment-id result-id)
-      "\n")
+      (format "  function_of(v~a)(v~a, &v~a);\n" function-id environment-id result-id)
+      (optional-collect))
      result-id
      context)))
 
@@ -279,7 +306,8 @@
          [context (enqueue-pending-function new-function-id function-body new-context context)]
          [closure-id (new-variable-id context)]
          [context (increment-variable-id context)])
-    (list (format "  create_closure(env, f~a, &v~a);\n" new-function-id closure-id)
+    (list (string-append (format "  create_closure(env, f~a, &v~a);\n" new-function-id closure-id)
+                         (optional-collect))
           closure-id
           context)))
 
@@ -288,7 +316,9 @@
         [variable-id (new-variable-id context)]
         [context (increment-variable-id context)])
     (if (null? quoted-list-statement)
-        (list (format "  create_nil_value(&v~a);\n" variable-id) variable-id context)
+        (list (string-append (format "  create_nil_value(&v~a);\n" variable-id) (optional-collect))
+              variable-id
+              context)
         (let* ([first-statement-result (generate-statement-quoted (car quoted-list-statement)
                                                                   context)]
                [first-statement-code (car first-statement-result)]
@@ -309,7 +339,8 @@
                                (format "  create_cons_cell(v~a, v~a, &v~a);\n"
                                        first-statement-variable
                                        rest-statement-variable
-                                       result-id))
+                                       result-id)
+                               (optional-collect))
                 result-id
                 context)))))
 
@@ -319,19 +350,24 @@
          [quoted-statement-type (car quoted-statement)])
     (cond
       [(eq? quoted-statement-type 'number-statement)
-       (list (format "  create_number_value(~a, &v~a);\n" (cdr quoted-statement) variable-id)
+       (list (string-append
+              (format "  create_number_value(~a, &v~a);\n" (cdr quoted-statement) variable-id)
+              (optional-collect))
              variable-id
              context)]
       [(eq? quoted-statement-type 'bool-statement)
-       (list (format "  create_boolean_value(~a, &v~a);\n"
-                     (if (cdr quoted-statement) "true" "false")
-                     variable-id)
+       (list (string-append (format "  create_boolean_value(~a, &v~a);\n"
+                                    (if (cdr quoted-statement) "true" "false")
+                                    variable-id)
+                            (optional-collect))
              variable-id
              context)]
       [(eq? quoted-statement-type 'list-statement)
        (generate-list-statement-quoted quoted-statement context)]
       [(eq? quoted-statement-type 'symbol-statement)
-       (list (format "  create_symbol_value(\"~a\", &v~a);\n" (cdr quoted-statement) variable-id)
+       (list (string-append
+              (format "  create_symbol_value(\"~a\", &v~a);\n" (cdr quoted-statement) variable-id)
+              (optional-collect))
              variable-id
              context)]
       [else (error (format "[log] Error: Unknown quoted statement type ~a" quoted-statement-type))])))
@@ -395,7 +431,8 @@
          [expression-var (car expression-rest)]
          [expression-code
           (string-append expression-code
-                         (format "  set_environment(env, ~a, v~a);\n" index expression-var))]
+                         (format "  set_environment(env, ~a, v~a);\n" index expression-var)
+                         (optional-collect))]
          [expression-result (cons expression-code expression-rest)])
     expression-result))
 
@@ -431,10 +468,9 @@
                    [rest-statement-rest (cdr rest-statement-result)]
                    [rest-statement-variable (car rest-statement-rest)]
                    [context (cadr rest-statement-rest)])
-              (list
-               (string-append first-statement-code generate-collect-statement rest-statement-code)
-               rest-statement-variable
-               context))
+              (list (string-append first-statement-code rest-statement-code)
+                    rest-statement-variable
+                    context))
             (let* ([define-names (car defines)]
                    [define-values (cdr defines)]
                    [context (push-symbols define-names context)]
@@ -456,6 +492,7 @@
                                    (length define-names)
                                    environment-id
                                    environment-id)
+                           (optional-collect)
                            define-code
                            generate-statements-code)
                           generate-statements-rest)])
@@ -484,8 +521,8 @@
          (string-append
           prefix
           argument-code
-          (format "  set_environment(v~a, ~a, v~a);" environment-id index argument-variable)
-          "\n")
+          (format "  set_environment(v~a, ~a, v~a);\n" environment-id index argument-variable)
+          (optional-collect))
          (+ index 1)
          environment-id
          context))))
@@ -498,9 +535,10 @@
   (if (= number-of-variables 0)
       empty-string
       (string-append (generate-temp-declarations (- number-of-variables 1))
-                     (format "  ekans_value* v~a = NULL;\n  push_stack_slot(&v~a);\n"
-                             number-of-variables
-                             number-of-variables))))
+                     (format "  ekans_value* v~a = NULL;\n" number-of-variables)
+                     (optional-collect)
+                     (format "  push_stack_slot(&v~a);\n" number-of-variables)
+                     (optional-collect))))
 
 ;
 ; This function generates the code for all the functions by making sure we drain the queue
@@ -547,10 +585,9 @@
                     "\n"
                     (generate-temp-declarations number-of-variables)
                     statements-code
-                    (format "  *pReturn = v~a;" statements-variable)
-                    "\n"
-                    (format "  pop_stack_slot(~a);" number-of-variables)
-                    "\n"
+                    (format "  *pReturn = v~a;\n" statements-variable)
+                    (format "  pop_stack_slot(~a);\n" number-of-variables)
+                    (generate-collect-statement)
                     rb
                     "\n")
      context)))
@@ -603,10 +640,8 @@
 (define (populate-environment elements index temp-id)
   (if (null? elements)
       empty-string
-      (string-append (format "  create_closure(*pEnv, ~a, &v~a);" (cadr (car elements)) temp-id)
-                     "\n"
-                     (format "  set_environment(*pEnv, ~a, v~a);" index temp-id)
-                     "\n"
+      (string-append (format "  create_closure(*pEnv, ~a, &v~a);\n" (cadr (car elements)) temp-id)
+                     (format "  set_environment(*pEnv, ~a, v~a);\n" index temp-id)
                      (populate-environment (cdr elements) (+ index 1) (+ temp-id 1)))))
 
 ;
@@ -617,12 +652,10 @@
                  "void build_builtins(ekans_value** pEnv) "
                  lb
                  "\n"
-                 (format "  create_environment(NULL, ~a, pEnv);" (length builtins))
-                 "\n"
+                 (format "  create_environment(NULL, ~a, pEnv);\n" (length builtins))
                  (generate-temp-declarations (length builtins))
                  (populate-environment builtins 0 1)
-                 (format "  pop_stack_slot(~a);" (length builtins))
-                 "\n"
+                 (format "  pop_stack_slot(~a);\n" (length builtins))
                  rb
                  "\n"))
 
@@ -634,32 +667,20 @@
 ;
 (define (epilogue)
   (string-append (generate-build-builtins)
-                 (string-append "\n"
-                                "int main(int argc, char** argv) "
+                 (string-append "int main(int argc, char** argv) "
                                 lb
                                 "\n"
-                                "  initialize_ekans();"
-                                "\n"
-                                "  ekans_value* env = NULL;"
-                                "\n"
-                                "  push_stack_slot(&env);"
-                                "\n"
-                                "  ekans_value* v1 = NULL;"
-                                "\n"
-                                "  push_stack_slot(&v1);"
-                                "\n"
-                                "  build_builtins(&env);"
-                                "\n"
-                                "  f1(env, &v1);"
-                                "\n"
-                                "  print_ekans_value(v1);"
-                                "\n"
-                                "  pop_stack_slot(2);"
-                                "\n"
-                                "  finalize_ekans();"
-                                "\n"
-                                "  return 0;"
-                                "\n"
+                                "  initialize_ekans();\n"
+                                "  ekans_value* env = NULL;\n"
+                                "  push_stack_slot(&env);\n"
+                                "  ekans_value* v1 = NULL;\n"
+                                "  push_stack_slot(&v1);\n"
+                                "  build_builtins(&env);\n"
+                                "  f1(env, &v1);\n"
+                                "  print_ekans_value(v1);\n"
+                                "  pop_stack_slot(2);\n"
+                                "  finalize_ekans();\n"
+                                "  return 0;\n"
                                 rb
                                 "\n")))
 
