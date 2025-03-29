@@ -62,6 +62,13 @@ test-racket: fmt
 	raco test test/test-lexer.rkt
 	raco test test/test-parser.rkt
 
+test-multi-files: clean build/compiler.out build/ekans.o 
+	rm -f test/data/multi/output.rkt
+	python3 script/merge_files.py test/data/multi/ test/data/multi/output.rkt
+	./build/compiler.out test/data/multi/output.rkt build/output.c
+	$(CC) $(INCLUDES) $(CFLAGS) -o build/output.out build/output.c build/ekans.o
+	./build/output.out
+
 test-runtime: fmt build/test-runtime.out
 	./build/test-runtime.out
 
