@@ -51,7 +51,7 @@ void closure_of(ekans_value* val, ekans_value** pReturn);
 
 ekans_function function_of(ekans_value* val);
 
-// primitive functions
+// builtin functions (exposed as builtin functions, user code can call these)
 
 void plus(ekans_value* environment, ekans_value** pReturn);
 
@@ -64,6 +64,18 @@ void division(ekans_value* environment, ekans_value** pReturn);
 void list_cons(ekans_value* environment, ekans_value** pReturn);
 
 void equals(ekans_value* environment, ekans_value** pReturn);
+
+void char_le(ekans_value* environment, ekans_value** pReturn);
+
+void char_ge(ekans_value* environment, ekans_value** pReturn);
+
+void is_null(ekans_value* environment, ekans_value** pReturn);
+
+void car(ekans_value* environment, ekans_value** pReturn);
+
+void cdr(ekans_value* environment, ekans_value** pReturn);
+
+// primitive functions (called by compiler only)
 
 bool is_true(ekans_value* v);
 

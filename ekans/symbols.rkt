@@ -9,13 +9,16 @@
 (provide builtins)
 
 (define builtins
-  '(("+" "plus") ; ekans_value* plus(ekans_value* environment);
-    ("-" "subtract") ; ekans_value* subtract(ekans_value* environment);
-    ("*" "multiply") ; ekans_value* multiply(ekans_value* environment);
-    ("/" "division") ; ekans_value* division(ekans_value* environment)
-    ("cons" "list_cons") ; void list_cons(ekans_value* environment, ekans_value** pReturn);
-    ("=" "equals") ; void equals(ekans_value* environment, ekans_value** pReturn);
-    ))
+  '(("+" "plus") ("-" "subtract")
+                 ("*" "multiply")
+                 ("/" "division")
+                 ("char<=?" "char_le")
+                 ("char>=?" "char_ge")
+                 ("cons" "list_cons")
+                 ("=" "equals")
+                 ("null?" "is_null")
+                 ("car" "car")
+                 ("cdr" "cdr")))
 
 (define (initial-symbol-table)
   (cons (map car builtins) '()))
