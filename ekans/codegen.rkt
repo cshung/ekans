@@ -578,8 +578,9 @@
          [context (caddr statements-result)]
          [number-of-variables (number-of-variables context)])
     (cons
-     (string-append (optional-comment (format "/*\nThe symbol table for this function is:\n~a*/\n"
+     (string-append (optional-comment (format "/*\nThe symbol table for this function is:\n~a\n"
                                               (pretty-symbol-table (symbol-table original-context))))
+                    (optional-comment (format "The body for this function is:\n~a\n*/\n" statements))
                     (format "void f~a(ekans_value* env, ekans_value** pReturn) " function-id)
                     lb
                     "\n"
