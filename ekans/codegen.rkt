@@ -191,6 +191,43 @@
           result-id
           context)))
 
+; and statement
+(define (generate-and-statement and-statement context)
+  (let ([head (car and-statement)] ; head = (symbol-statement . "and")
+        [arguments (cdr and-statement)] ; arguments = (#b1 #b2 #b3)
+        )
+    (if (null? arguments)
+        (generate-bool-statement (cons 'bool-statement #t) context)
+        (let* ([first-argument (car arguments)] ; first-argument = #b1
+               [rest-arguments (cdr arguments)] ; rest-arguments = (#b2 #b3)
+               [if-statement (list 'list-statement
+                                   (cons 'symbol-statement "if")
+                                   first-argument
+                                   (cons 'list-statement (cons head rest-arguments))
+                                   (cons 'bool-statement
+                                         #f))] ; if-statement = (if #b1 (and #b2 #b3) #f)
+               )
+          (generate-statement if-statement context)))))
+
+; or statement
+(define (generate-or-statement or-statement context)
+  (let ([head (car or-statement)] ; head = (symbol-statement . "or")
+        [arguments (cdr or-statement)] ; arguments = (#b1 #b2 #b3)
+        )
+    (if (null? arguments)
+        (generate-bool-statement (cons 'bool-statement #f) context)
+        (let* ([first-argument (car arguments)] ; first-argument = #b1
+               [rest-arguments (cdr arguments)] ; rest-arguments = (#b2 #b3)
+               [if-statement
+                (list 'list-statement
+                      (cons 'symbol-statement "if")
+                      first-argument
+                      (cons 'bool-statement #t)
+                      (cons 'list-statement
+                            (cons head rest-arguments)))] ; if-statement = (if #b1 (or #b2 #b3) #f)
+               )
+          (generate-statement if-statement context)))))
+
 ;
 ; A list statement is simply a list in the source code. It could be a function call, a lambda, and many other things
 ; that we will handle in the future.
@@ -213,10 +250,15 @@
       [(and (equal? (caar list-statement-list) 'symbol-statement)
             (equal? (cdar list-statement-list) "let*"))
        (generate-let-star list-statement-list context)]
-      ; TODO, handle and,or
       [(and (equal? (caar list-statement-list) 'symbol-statement)
             (equal? (cdar list-statement-list) "if"))
        (generate-if-statement list-statement-list context)]
+      [(and (equal? (caar list-statement-list) 'symbol-statement)
+            (equal? (cdar list-statement-list) "and"))
+       (generate-and-statement list-statement-list context)]
+      [(and (equal? (caar list-statement-list) 'symbol-statement)
+            (equal? (cdar list-statement-list) "or"))
+       (generate-or-statement list-statement-list context)]
       ; we cannot treat them as function - if we do, we will always evaluate all branches, which is not
       ; the way it should be
       [else (generate-application list-statement-list context)])))
