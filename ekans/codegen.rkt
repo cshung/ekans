@@ -228,6 +228,40 @@
                )
           (generate-statement if-statement context)))))
 
+; cond statement
+(define (generate-cond-statement cond-statement context)
+  (if (> (length cond-statement) 2)
+      (let* ([head (car cond-statement)]
+             [result-id (new-variable-id context)] ; result-id = v1
+             [context (increment-variable-id context)] ; context = updated-context
+             [first-branch (cadr cond-statement)]
+             [first-condition (cadr first-branch)]
+             [first-branch-logic (cddr first-branch)]
+             [first-condition-result (generate-statement first-condition context)]
+             [first-condition-code (car first-condition-result)]
+             [first-condition-var (cadr first-condition-result)]
+             [context (caddr first-condition-result)]
+             [first-branch-logic-result (generate-statements first-branch-logic context '())]
+             [first-branch-logic-code (car first-branch-logic-result)]
+             [first-branch-logic-var (cadr first-branch-logic-result)]
+             [context (caddr first-branch-logic-result)]
+             [else-logic (cons head (cddr cond-statement))]
+             [else-logic-result (generate-cond-statement else-logic context)]
+             [else-logic-code (car else-logic-result)]
+             [else-logic-var (cadr else-logic-result)]
+             [context (caddr else-logic-result)])
+        (list (string-append first-condition-code
+                             (format "  if (is_true(v~a)) {\n" first-condition-var)
+                             first-branch-logic-code
+                             (format "    v~a = v~a;\n" result-id first-branch-logic-var)
+                             "  } else {\n"
+                             else-logic-code
+                             (format "    v~a = v~a;\n" result-id else-logic-var)
+                             "  }\n")
+              result-id
+              context))
+      (generate-statements (cddadr cond-statement) context '())))
+
 ;
 ; A list statement is simply a list in the source code. It could be a function call, a lambda, and many other things
 ; that we will handle in the future.
@@ -259,6 +293,9 @@
       [(and (equal? (caar list-statement-list) 'symbol-statement)
             (equal? (cdar list-statement-list) "or"))
        (generate-or-statement list-statement-list context)]
+      [(and (equal? (caar list-statement-list) 'symbol-statement)
+            (equal? (cdar list-statement-list) "cond"))
+       (generate-cond-statement list-statement-list context)]
       ; we cannot treat them as function - if we do, we will always evaluate all branches, which is not
       ; the way it should be
       [else (generate-application list-statement-list context)])))
