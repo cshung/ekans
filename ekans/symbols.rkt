@@ -19,7 +19,8 @@
                  ("eq?" "equals")
                  ("null?" "is_null")
                  ("car" "car")
-                 ("cdr" "cdr")))
+                 ("cdr" "cdr")
+                 ("char->integer" "char_to_int")))
 
 (define (initial-symbol-table)
   (cons (map car builtins) '()))

@@ -377,12 +377,7 @@
          [new-function-id (new-function-id context)]
          [context (increment-function-id context)]
          [new-symbol-table (cons arguments-symbols (symbol-table context))]
-         [new-context (list 0 ; number of variables in new function
-                            (number-of-functions context) ; number of functions in the file
-                            new-symbol-table
-                            '() ; list of pending functions for the new function
-                            )]
-         [context (enqueue-pending-function new-function-id function-body new-context context)]
+         [context (enqueue-pending-function new-function-id function-body new-symbol-table context)]
          [closure-id (new-variable-id context)]
          [context (increment-variable-id context)])
     (list (string-append (format "  create_closure(env, f~a, &v~a);\n" new-function-id closure-id)
@@ -439,6 +434,12 @@
                                     (if (cdr quoted-statement) "true" "false")
                                     variable-id)
                             (optional-collect))
+             variable-id
+             context)]
+      [(eq? quoted-statement-type 'char-statement)
+       (list (string-append
+              (format "  create_char_value('~a', &v~a);\n" (cdr quoted-statement) variable-id)
+              (optional-collect))
              variable-id
              context)]
       [(eq? quoted-statement-type 'list-statement)
@@ -622,19 +623,29 @@
 ;
 ; This function generates the code for all the functions by making sure we drain the queue
 ;
-(define (generate-all-functions queue)
-  (if (null? queue)
+(define (generate-all-functions context)
+  (if (null? (pending-functions context))
       (cons empty-string 0)
-      (let* ([function (car queue)]
+      (let* ([queue (pending-functions context)]
+             [function (car queue)]
              [queue (cdr queue)]
              [function-id (car function)]
              [function-body (cadr function)]
-             [function-context (caddr function)]
+             [function-symbol-table (caddr function)]
+             [function-context (list 0 ; number of variables
+                                     (number-of-functions context) ; number of functions
+                                     function-symbol-table ; symbol table
+                                     '())]
              [function-result (generate-function function-id function-body function-context)]
              [function-code (car function-result)]
              [function-context (cdr function-result)]
-             [queue (append queue (pending-functions function-context))]
-             [rest-result (generate-all-functions queue)]
+             ; Reverse the list because `cons` enqueues functions in reverse order, ensuring correct queue order.
+             [queue (append queue (reverse (pending-functions function-context)))]
+             [function-context (list 0 ; number of variables
+                                     (number-of-functions function-context) ; number of functions
+                                     '() ; symbol table
+                                     queue)]
+             [rest-result (generate-all-functions function-context)]
              [rest-code (car rest-result)]
              [rest-count (cdr rest-result)])
         (cons (string-append function-code rest-code) (+ rest-count 1)))))
@@ -707,8 +718,12 @@
 ; It starts with the prologue, then generates all the functions, and finally generates the epilogue.
 ;
 (define (generate-all-code statements)
-  (let* ([initial-queue (list (list 1 statements (initial-context)))]
-         [all-function-result (generate-all-functions initial-queue)]
+  (let* ([initial-context (list 0 ; number of variables
+                                1 ; number of functions
+                                '() ; symbol table
+                                (list (list 1 statements (initial-symbol-table))) ; pending functions
+                                )]
+         [all-function-result (generate-all-functions initial-context)]
          [all-function-code (car all-function-result)]
          [all-function-count (cdr all-function-result)])
     (string-append (prologue all-function-count) all-function-code (epilogue))))
@@ -763,18 +778,6 @@
                                 "  return 0;\n"
                                 rb
                                 "\n")))
-
-;
-; This function generates the initial context for the program.
-; It initializes the number of variables and functions to 0, and creates an symbol table corresponding to the defines and builtins.
-; This makes sure the symbol table is always in sync with the runtime environment.
-;
-(define (initial-context)
-  (list 0 ; number of variables
-        1 ; number of functions
-        (initial-symbol-table)
-        '() ; list of pending functions to generate
-        ))
 
 ;
 ; Save the output to a file

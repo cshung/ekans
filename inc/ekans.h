@@ -75,6 +75,8 @@ void car(ekans_value* environment, ekans_value** pReturn);
 
 void cdr(ekans_value* environment, ekans_value** pReturn);
 
+void char_to_int(ekans_value* environment, ekans_value** pReturn);
+
 // primitive functions (called by compiler only)
 
 bool is_true(ekans_value* v);

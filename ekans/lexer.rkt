@@ -24,7 +24,7 @@
   (if (null? lst)
       acc
       (let ([digit (char->integer (car lst))])
-        (digits-to-number (cdr lst) (+ (* acc 10) (- digit 48))))))
+        (digits-to-number (cdr lst) (+ (* acc 10) (- digit (char->integer #\0)))))))
 
 (define (token-end? suffix)
   (or (null? suffix) (member (car suffix) '(#\space #\newline #\( #\) #\[ #\]))))

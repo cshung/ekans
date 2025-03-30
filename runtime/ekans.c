@@ -427,6 +427,18 @@ void char_ge(ekans_value* environment, ekans_value** pReturn) {
   create_boolean_value(environment->value.e.bindings[0]->value.a >= environment->value.e.bindings[1]->value.a, pReturn);
 }
 
+void char_to_int(ekans_value* environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count != 1) {
+    fprintf(stderr, "Error: char_to_int requires exactly one arguments\n");
+    exit(1);
+  }
+  if (environment->value.e.bindings[0]->type != character) {
+    fprintf(stderr, "Error: char_to_int requires its 1st argument to be character\n");
+    exit(1);
+  }
+  create_number_value((int)environment->value.e.bindings[0]->value.a, pReturn);
+}
+
 void list_cons(ekans_value* environment, ekans_value** pReturn) {
   if (environment->value.e.binding_count != 2) {
     fprintf(stderr, "Error: cons requires exactly two arguments\n");
