@@ -11,8 +11,9 @@ compiled/
 .\#*
 
 # Editor
-.code/
 .idea/
+.vscode/*
+!.vscode/tasks.json
 
 # Executable
 *.out

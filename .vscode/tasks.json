@@ -1,0 +1,60 @@
+// Copyright (c) 2025 Good Night, Good Morning and contributors (see Contributors.md)
+// Licensed under the MIT License. See the LICENSE file in the project root for details.
+//
+// Usage: Ctrl+Shift+B to run the following tasks
+//
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "make clean",
+      "type": "shell",
+      "command": "make clean",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "make fmt",
+      "type": "shell",
+      "command": "make fmt",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "make test-phase-0",
+      "type": "shell",
+      "command": "make test-phase-0",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "make test-phase-1",
+      "type": "shell",
+      "command": "make test-phase-1",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "make test-all",
+      "type": "shell",
+      "command": "make test-all",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}
