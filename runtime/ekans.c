@@ -237,7 +237,7 @@ void get_environment(ekans_value* env, int levels_up, int index, ekans_value** p
 
   assert(index < env->value.e.binding_count);
   if (env->value.e.bindings[index] == NULL) {
-    fprintf(stderr, "accessing a definition before evaluation\n");
+    fprintf(stderr, "Error: accessing a definition before evaluation\n");
     exit(1);
   }
   *pReturn = env->value.e.bindings[index];
@@ -245,7 +245,7 @@ void get_environment(ekans_value* env, int levels_up, int index, ekans_value** p
 
 void closure_of(ekans_value* val, ekans_value** pReturn) {
   if (!is(val, closure)) {
-    fprintf(stderr, "not a function encountered in a call\n");
+    fprintf(stderr, "Error: not a function encountered in a call\n");
     exit(1);
   }
   *pReturn = val->value.c.closure;
@@ -253,7 +253,7 @@ void closure_of(ekans_value* val, ekans_value** pReturn) {
 
 ekans_function function_of(ekans_value* val) {
   if (!is(val, closure)) {
-    fprintf(stderr, "not a function encountered in a call\n");
+    fprintf(stderr, "Error: not a function encountered in a call\n");
     exit(1);
   }
   return val->value.c.function;
@@ -322,7 +322,7 @@ void print_ekans_value_helper(ekans_value* v) {
       break;
     }
     default: {
-      assert(!"print_ekans_value: unsupported");
+      assert(!"Error: print_ekans_value: unsupported");
     } break;
   }
 }
@@ -332,7 +332,7 @@ void plus(ekans_value* environment, ekans_value** pReturn) {
   for (int i = 0; i < environment->value.e.binding_count; i++) {
     assert(environment->value.e.bindings[i] != NULL);
     if (environment->value.e.bindings[i]->type != number) {
-      fprintf(stderr, "not a number encountered in +\n");
+      fprintf(stderr, "Error: not a number encountered in +\n");
       exit(1);
     }
     sum += environment->value.e.bindings[i]->value.n;
@@ -345,7 +345,7 @@ void subtract(ekans_value* environment, ekans_value** pReturn) {
   for (int i = 1; i < environment->value.e.binding_count; i++) {
     assert(environment->value.e.bindings[i] != NULL);
     if (environment->value.e.bindings[i]->type != number) {
-      fprintf(stderr, "not a number encountered in -\n");
+      fprintf(stderr, "Error: not a number encountered in -\n");
       exit(1);
     }
     diff -= environment->value.e.bindings[i]->value.n;
@@ -359,14 +359,14 @@ void multiply(ekans_value* environment, ekans_value** pReturn) {
     assert(environment->value.e.bindings[i] != NULL);
 
     if (environment->value.e.bindings[i]->type != number) {
-      fprintf(stderr, "not a number encountered in *\n");
+      fprintf(stderr, "Error: not a number encountered in *\n");
       exit(1);
     }
 
     const int t = environment->value.e.bindings[i]->value.n;
     if (t != 0) {
       if (product > INT_MAX / t || product < INT_MIN / t) {
-        fprintf(stderr, "failed to integer overflow in the function: [%s]\n", __PRETTY_FUNCTION__);
+        fprintf(stderr, "Error: failed to integer overflow in the function: [%s]\n", __PRETTY_FUNCTION__);
         exit(1);
       }
     }
@@ -381,13 +381,13 @@ void division(ekans_value* environment, ekans_value** pReturn) {
     assert(environment->value.e.bindings[i] != NULL);
 
     if (environment->value.e.bindings[i]->type != number) {
-      fprintf(stderr, "not a number encountered in /\n");
+      fprintf(stderr, "Error: not a number encountered in /\n");
       exit(1);
     }
 
     const int t = environment->value.e.bindings[i]->value.n;
     if (t == 0) {
-      fprintf(stderr, "failed to division by zero in the function: [%s]\n", __PRETTY_FUNCTION__);
+      fprintf(stderr, "Error: failed to division by zero in the function: [%s]\n", __PRETTY_FUNCTION__);
       exit(1);
     }
     quotient /= t;
@@ -400,6 +400,7 @@ void not(ekans_value * environment, ekans_value** pReturn) {
     fprintf(stderr, "Error: not requires exactly one arguments\n");
     exit(1);
   }
+  assert(environment->value.e.bindings[0] != NULL);
   if (environment->value.e.bindings[0]->type != boolean) {
     fprintf(stderr, "Error: not requires its 1st argument to be boolean\n");
     exit(1);
@@ -412,6 +413,8 @@ void char_le(ekans_value* environment, ekans_value** pReturn) {
     fprintf(stderr, "Error: char_le requires exactly two arguments\n");
     exit(1);
   }
+  assert(environment->value.e.bindings[0] != NULL);
+  assert(environment->value.e.bindings[1] != NULL);
   if (environment->value.e.bindings[0]->type != character) {
     fprintf(stderr, "Error: char_le requires its 1st argument to be character\n");
     exit(1);
@@ -428,6 +431,8 @@ void char_ge(ekans_value* environment, ekans_value** pReturn) {
     fprintf(stderr, "Error: char_ge requires exactly two arguments\n");
     exit(1);
   }
+  assert(environment->value.e.bindings[0] != NULL);
+  assert(environment->value.e.bindings[1] != NULL);
   if (environment->value.e.bindings[0]->type != character) {
     fprintf(stderr, "Error: char_ge requires its 1st argument to be character\n");
     exit(1);
@@ -444,6 +449,7 @@ void char_to_int(ekans_value* environment, ekans_value** pReturn) {
     fprintf(stderr, "Error: char_to_int requires exactly one arguments\n");
     exit(1);
   }
+  assert(environment->value.e.bindings[0] != NULL);
   if (environment->value.e.bindings[0]->type != character) {
     fprintf(stderr, "Error: char_to_int requires its 1st argument to be character\n");
     exit(1);
@@ -456,6 +462,8 @@ void list_cons(ekans_value* environment, ekans_value** pReturn) {
     fprintf(stderr, "Error: cons requires exactly two arguments\n");
     exit(1);
   }
+  assert(environment->value.e.bindings[0] != NULL);
+  assert(environment->value.e.bindings[1] != NULL);
   create_cons_cell(environment->value.e.bindings[0], environment->value.e.bindings[1], pReturn);
 }
 
@@ -481,6 +489,7 @@ void is_null(ekans_value* environment, ekans_value** pReturn) {
     fprintf(stderr, "Error: is_null requires exactly one arguments\n");
     exit(1);
   }
+  assert(environment->value.e.bindings[0] != NULL);
   create_boolean_value(environment->value.e.bindings[0]->type == nil, pReturn);
 }
 
@@ -489,6 +498,7 @@ void car(ekans_value* environment, ekans_value** pReturn) {
     fprintf(stderr, "Error: car requires exactly one arguments\n");
     exit(1);
   }
+  assert(environment->value.e.bindings[0] != NULL);
   if (environment->value.e.bindings[0]->type != cons) {
     fprintf(stderr, "Error: car requires its 1st argument to be a pair\n");
     exit(1);
@@ -501,6 +511,7 @@ void cdr(ekans_value* environment, ekans_value** pReturn) {
     fprintf(stderr, "Error: cdr requires exactly one arguments\n");
     exit(1);
   }
+  assert(environment->value.e.bindings[0] != NULL);
   if (environment->value.e.bindings[0]->type != cons) {
     fprintf(stderr, "Error: cdr requires its 1st argument to be a pair\n");
     exit(1);
@@ -510,7 +521,7 @@ void cdr(ekans_value* environment, ekans_value** pReturn) {
 
 bool is_true(ekans_value* v) {
   if (v->type != boolean) {
-    fprintf(stderr, "not a boolean encountered in is_true\n");
+    fprintf(stderr, "Error: not a boolean encountered in is_true\n");
     exit(1);
   }
   return v->value.b;
@@ -521,9 +532,23 @@ void equals(ekans_value* environment, ekans_value** pReturn) {
     fprintf(stderr, "Error: equals requires exactly two arguments\n");
     exit(1);
   }
-  ekans_value* v1     = environment->value.e.bindings[0];
-  ekans_value* v2     = environment->value.e.bindings[1];
-  bool         result = is(v1, number) && is(v2, number) && (v1->value.n == v2->value.n);
+  assert(environment->value.e.bindings[0] != NULL);
+  assert(environment->value.e.bindings[1] != NULL);
+  ekans_value* v1 = environment->value.e.bindings[0];
+  ekans_value* v2 = environment->value.e.bindings[1];
+  if (v1->type != v2->type) {
+    fprintf(stderr, "Error: type mismatch encountered in equals\n");
+    exit(1);
+  }
+  bool result = false;
+  if (is(v1, number)) {
+    result = v1->value.n == v2->value.n;
+  } else if (is(v1, character)) {
+    result = v1->value.a == v2->value.a;
+  } else {
+    fprintf(stderr, "Error: unsupported type encountered in equals\n");
+    exit(1);
+  }
   create_boolean_value(result, pReturn);
 }
 
@@ -532,7 +557,7 @@ void equals(ekans_value* environment, ekans_value** pReturn) {
 void* brutal_malloc(size_t size) {
   void* result = malloc(size);
   if (!result) {
-    fprintf(stderr, "failed to allocate memory\n");
+    fprintf(stderr, "Error: failed to allocate memory\n");
     exit(1);
   }
   // fprintf(stderr, "malloc %p\n", result);
@@ -542,7 +567,7 @@ void* brutal_malloc(size_t size) {
 void* brutal_calloc(size_t count, size_t size) {
   void* result = calloc(count, size);
   if (!result) {
-    fprintf(stderr, "failed to allocate memory\n");
+    fprintf(stderr, "Error: failed to allocate memory\n");
     exit(1);
   }
   // fprintf(stderr, "calloc %p\n", result);

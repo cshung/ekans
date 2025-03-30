@@ -19,6 +19,7 @@
                  ("list" "list_constructor")
                  ("=" "equals")
                  ("eq?" "equals")
+                 ("equal?" "equals")
                  ("null?" "is_null")
                  ("car" "car")
                  ("cdr" "cdr")
