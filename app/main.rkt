@@ -10,8 +10,17 @@
   (call-with-input-file filename
                         (lambda (port) (let ([content (port->string port)]) (string->list content)))))
 
+(define library
+  (string->list
+   "
+(define (map f lst)
+  (if (null? lst)
+      '()
+      (cons (f (car lst)) (map f (cdr lst)))))
+"))
+
 (define (compiler input-file output-file)
-  (define input (read-file input-file))
+  (define input (append library (read-file input-file)))
   (define parsed-program (parse-statements input))
   (if (eq? parsed-program 'error)
       (displayln "Error: Unable to parse the input.")
