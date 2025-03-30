@@ -395,6 +395,18 @@ void division(ekans_value* environment, ekans_value** pReturn) {
   create_number_value(quotient, pReturn);
 }
 
+void not(ekans_value * environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count != 1) {
+    fprintf(stderr, "Error: not requires exactly one arguments\n");
+    exit(1);
+  }
+  if (environment->value.e.bindings[0]->type != boolean) {
+    fprintf(stderr, "Error: not requires its 1st argument to be boolean\n");
+    exit(1);
+  }
+  create_boolean_value(!environment->value.e.bindings[0]->value.b, pReturn);
+}
+
 void char_le(ekans_value* environment, ekans_value** pReturn) {
   if (environment->value.e.binding_count != 2) {
     fprintf(stderr, "Error: char_le requires exactly two arguments\n");

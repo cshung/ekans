@@ -61,6 +61,8 @@ void multiply(ekans_value* environment, ekans_value** pReturn);
 
 void division(ekans_value* environment, ekans_value** pReturn);
 
+void not(ekans_value * environment, ekans_value** pReturn);
+
 void list_cons(ekans_value* environment, ekans_value** pReturn);
 
 void equals(ekans_value* environment, ekans_value** pReturn);

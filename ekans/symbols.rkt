@@ -12,6 +12,7 @@
   '(("+" "plus") ("-" "subtract")
                  ("*" "multiply")
                  ("/" "division")
+                 ("not" "not")
                  ("char<=?" "char_le")
                  ("char>=?" "char_ge")
                  ("cons" "list_cons")
