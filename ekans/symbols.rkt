@@ -16,6 +16,7 @@
                  ("char>=?" "char_ge")
                  ("cons" "list_cons")
                  ("=" "equals")
+                 ("eq?" "equals")
                  ("null?" "is_null")
                  ("car" "car")
                  ("cdr" "cdr")))
