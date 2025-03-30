@@ -65,6 +65,8 @@ void not(ekans_value * environment, ekans_value** pReturn);
 
 void list_cons(ekans_value* environment, ekans_value** pReturn);
 
+void list_constructor(ekans_value* environment, ekans_value** pReturn);
+
 void equals(ekans_value* environment, ekans_value** pReturn);
 
 void char_le(ekans_value* environment, ekans_value** pReturn);

@@ -459,6 +459,23 @@ void list_cons(ekans_value* environment, ekans_value** pReturn) {
   create_cons_cell(environment->value.e.bindings[0], environment->value.e.bindings[1], pReturn);
 }
 
+void list_constructor(ekans_value* environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count == 0) {
+    create_nil_value(pReturn);
+    return;
+  }
+
+  ekans_value* result = NULL;
+  create_nil_value(&result);
+
+  for (int i = environment->value.e.binding_count - 1; i >= 0; --i) {
+    ekans_value* temp = NULL;
+    create_cons_cell(environment->value.e.bindings[i], result, &temp);
+    result = temp;
+  }
+  *pReturn = result;
+}
+
 void is_null(ekans_value* environment, ekans_value** pReturn) {
   if (environment->value.e.binding_count != 1) {
     fprintf(stderr, "Error: is_null requires exactly one arguments\n");

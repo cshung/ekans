@@ -16,6 +16,7 @@
                  ("char<=?" "char_le")
                  ("char>=?" "char_ge")
                  ("cons" "list_cons")
+                 ("list" "list_constructor")
                  ("=" "equals")
                  ("eq?" "equals")
                  ("null?" "is_null")
