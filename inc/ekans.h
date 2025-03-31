@@ -69,6 +69,8 @@ void list_constructor(ekans_value* environment, ekans_value** pReturn);
 
 void equals(ekans_value* environment, ekans_value** pReturn);
 
+void member(ekans_value* environment, ekans_value** pReturn);
+
 void char_le(ekans_value* environment, ekans_value** pReturn);
 
 void char_ge(ekans_value* environment, ekans_value** pReturn);

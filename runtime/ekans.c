@@ -552,6 +552,49 @@ void equals(ekans_value* environment, ekans_value** pReturn) {
   create_boolean_value(result, pReturn);
 }
 
+void member(ekans_value* environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count != 2) {
+    fprintf(stderr, "Error: member requires exactly two arguments\n");
+    exit(1);
+  }
+
+  // sample
+  // user input   : (member 23 '(12 23 34))
+  // expect output: '(23 34)
+  ekans_value* target = environment->value.e.bindings[0]; // 23
+  ekans_value* list   = environment->value.e.bindings[1]; // '(12 23 34)
+
+  while (list->type == cons) {
+    ekans_value* head = list->value.l.head; // head = 12 if list = '(12 23 34)
+
+    ekans_value* equals_env = NULL;
+    create_environment(NULL, 2, &equals_env);
+
+    set_environment(equals_env, 0, target);
+    set_environment(equals_env, 1, head);
+
+    ekans_value* equals_result = NULL;
+    equals(equals_env, &equals_result);
+
+    if (is_true(equals_result)) {
+      // *pReturn = list;
+      //
+      // Warning: `return true` is not the definition of member function in Racket
+      // please check the original definition in Racket:
+      // https://docs.racket-lang.org/reference/pairs.html#%28def._%28%28lib._racket%2Fprivate%2Fbase..rkt%29._member%29%29
+      create_boolean_value(true, pReturn);
+      return;
+    }
+    list = list->value.l.tail;
+  }
+
+  if (list->type != nil) {
+    fprintf(stderr, "[%s][Error]: the list must end with a nil type to be valid\n", __PRETTY_FUNCTION__);
+    exit(1);
+  }
+  create_boolean_value(false, pReturn); // target is not in the list
+}
+
 // Allocation helpers - just quit the process whenever an error happens
 
 void* brutal_malloc(size_t size) {

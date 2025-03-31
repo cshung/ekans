@@ -39,7 +39,14 @@
                 [cdr prefix])
               '()))))
 
-(list (match '(#\a #\b #\c)
-        '(#\a #\c))
-      (match '(#\a #\b #\c)
-        '(#\a #\b)))
+; (list (match '(#\a #\b #\c)
+;         '(#\a #\c))
+;       (match '(#\a #\b #\c)
+;         '(#\a #\b)))
+
+(member 23 '(12 23 34))
+
+; (define (token-end? suffix)
+;   (or (null? suffix) (member (car suffix) '(#\space #\newline #\( #\) #\[ #\]))))
+;
+; (token-end? '(#\newline #\space))

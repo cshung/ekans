@@ -21,6 +21,7 @@
                  ("eq?" "equals")
                  ("equal?" "equals")
                  ("null?" "is_null")
+                 ("member" "member")
                  ("car" "car")
                  ("cdr" "cdr")
                  ("char->integer" "char_to_int")))
