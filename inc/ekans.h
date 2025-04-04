@@ -63,6 +63,10 @@ void division(ekans_value* environment, ekans_value** pReturn);
 
 void not(ekans_value * environment, ekans_value** pReturn);
 
+void less(ekans_value* environment, ekans_value** pReturn);
+
+void greater(ekans_value* environment, ekans_value** pReturn);
+
 void list_cons(ekans_value* environment, ekans_value** pReturn);
 
 void list_constructor(ekans_value* environment, ekans_value** pReturn);
@@ -83,6 +87,16 @@ void cdr(ekans_value* environment, ekans_value** pReturn);
 
 void char_to_int(ekans_value* environment, ekans_value** pReturn);
 
+void string_to_list(ekans_value* environment, ekans_value** pReturn);
+
+void args(ekans_value* environment, ekans_value** pReturn);
+
+void println(ekans_value* environment, ekans_value** pReturn);
+
+void failfast(ekans_value* environment, ekans_value** pReturn);
+
+void is_pair(ekans_value* environment, ekans_value** pReturn);
+
 // primitive functions (called by compiler only)
 
 bool is_true(ekans_value* v);
@@ -99,6 +113,6 @@ void collect();
 
 // life cycle management
 
-void initialize_ekans();
+void initialize_ekans(int argc, char** argv);
 
 void finalize_ekans();

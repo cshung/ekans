@@ -27,9 +27,14 @@ stack_slot* g_stack_slots = NULL;
 ekans_value head;
 ekans_value tail;
 
+int    g_argc;
+char** g_argv;
+
 // runtime initialization/finalization
 
-void initialize_ekans() {
+void initialize_ekans(int argc, char** argv) {
+  g_argc    = argc;
+  g_argv    = argv;
   head.prev = NULL;
   head.next = &tail;
   tail.prev = &head;
@@ -395,6 +400,42 @@ void division(ekans_value* environment, ekans_value** pReturn) {
   create_number_value(quotient, pReturn);
 }
 
+void less(ekans_value* environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count != 2) {
+    fprintf(stderr, "Error: < requires exactly two arguments\n");
+    exit(1);
+  }
+  assert(environment->value.e.bindings[0] != NULL);
+  assert(environment->value.e.bindings[1] != NULL);
+  if (environment->value.e.bindings[0]->type != number) {
+    fprintf(stderr, "Error: < requires its 1st argument to be number\n");
+    exit(1);
+  }
+  if (environment->value.e.bindings[1]->type != number) {
+    fprintf(stderr, "Error: < requires its 2nd argument to be number\n");
+    exit(1);
+  }
+  create_boolean_value(environment->value.e.bindings[0]->value.n < environment->value.e.bindings[1]->value.n, pReturn);
+}
+
+void greater(ekans_value* environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count != 2) {
+    fprintf(stderr, "Error: > requires exactly two arguments\n");
+    exit(1);
+  }
+  assert(environment->value.e.bindings[0] != NULL);
+  assert(environment->value.e.bindings[1] != NULL);
+  if (environment->value.e.bindings[0]->type != number) {
+    fprintf(stderr, "Error: > requires its 1st argument to be number\n");
+    exit(1);
+  }
+  if (environment->value.e.bindings[1]->type != number) {
+    fprintf(stderr, "Error: > requires its 2nd argument to be number\n");
+    exit(1);
+  }
+  create_boolean_value(environment->value.e.bindings[0]->value.n > environment->value.e.bindings[1]->value.n, pReturn);
+}
+
 void not(ekans_value * environment, ekans_value** pReturn) {
   if (environment->value.e.binding_count != 1) {
     fprintf(stderr, "Error: not requires exactly one arguments\n");
@@ -455,6 +496,29 @@ void char_to_int(ekans_value* environment, ekans_value** pReturn) {
     exit(1);
   }
   create_number_value((int)environment->value.e.bindings[0]->value.a, pReturn);
+}
+
+void string_to_list(ekans_value* environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count != 1) {
+    fprintf(stderr, "Error: string_to_list requires exactly one arguments\n");
+    exit(1);
+  }
+  assert(environment->value.e.bindings[0] != NULL);
+  if (environment->value.e.bindings[0]->type != string) {
+    fprintf(stderr, "Error: string_to_list requires its 1st argument to be string\n");
+    exit(1);
+  }
+  ekans_value* result = NULL;
+  create_nil_value(&result);
+  int len = strlen(environment->value.e.bindings[0]->value.s);
+  for (int i = 0; i < len; i++) {
+    ekans_value* c;
+    create_char_value(environment->value.e.bindings[0]->value.s[len - i - 1], &c);
+    ekans_value* temp = NULL;
+    create_cons_cell(c, result, &temp);
+    result = temp;
+  }
+  *pReturn = result;
 }
 
 void list_cons(ekans_value* environment, ekans_value** pReturn) {
@@ -550,6 +614,56 @@ void equals(ekans_value* environment, ekans_value** pReturn) {
     exit(1);
   }
   create_boolean_value(result, pReturn);
+}
+
+void args(ekans_value* environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count != 0) {
+    fprintf(stderr, "Error: args requires exactly zero arguments\n");
+    exit(1);
+  }
+  ekans_value* result = NULL;
+  create_nil_value(&result);
+  for (int i = 1; i < g_argc; i++) {
+    ekans_value* c;
+    create_string_value(g_argv[g_argc - i], &c);
+    ekans_value* temp = NULL;
+    create_cons_cell(c, result, &temp);
+    result = temp;
+  }
+  *pReturn = result;
+}
+
+void println(ekans_value* environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count != 1) {
+    fprintf(stderr, "Error: displayln requires exactly one arguments\n");
+    exit(1);
+  }
+  assert(environment->value.e.bindings[0] != NULL);
+  if (environment->value.e.bindings[0]->type != string) {
+    fprintf(stderr, "Error: displayln requires its 1st argument to be a string\n");
+    exit(1);
+  }
+  printf("%s\n", environment->value.e.bindings[0]->value.s);
+  create_nil_value(pReturn);
+}
+
+void failfast(ekans_value* environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count != 1) {
+    fprintf(stderr, "Error: error requires exactly one arguments\n");
+    exit(1);
+  }
+  assert(environment->value.e.bindings[0] != NULL);
+  print_ekans_value(environment->value.e.bindings[0]);
+  exit(1);
+}
+
+void is_pair(ekans_value* environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count != 1) {
+    fprintf(stderr, "Error: error requires exactly one arguments\n");
+    exit(1);
+  }
+  assert(environment->value.e.bindings[0] != NULL);
+  create_boolean_value(environment->value.e.bindings[0]->type == cons, pReturn);
 }
 
 void member(ekans_value* environment, ekans_value** pReturn) {

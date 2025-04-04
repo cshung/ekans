@@ -24,7 +24,36 @@
                  ("member" "member")
                  ("car" "car")
                  ("cdr" "cdr")
-                 ("char->integer" "char_to_int")))
+                 ("char->integer" "char_to_int")
+                 ("string->list" "string_to_list")
+                 ("get-args" "args")
+                 ("displayln" "println")
+                 ("<" "less")
+                 (">" "greater")
+                 ("error" "failfast")
+                 ("pair?" "is_pair")
+                 ;
+                 ; Begin TODO
+                 ;
+                 ("list->string" "char_to_int")
+                 ("string-append" "char_to_int")
+                 ("format" "char_to_int")
+                 ("cadr" "char_to_int")
+                 ("caddr" "char_to_int")
+                 ("cddr" "char_to_int")
+                 ("cddadr" "char_to_int")
+                 ("cdadr" "char_to_int")
+                 ("caadr" "char_to_int")
+                 ("caar" "char_to_int")
+                 ("cdar" "char_to_int")
+                 ("cdddr" "char_to_int")
+                 ("cadddr" "char_to_int")
+                 ("write-file" "char_to_int")
+                 ("read-file" "char_to_int")
+                 ;
+                 ; End TODO
+                 ;
+                 ))
 
 (define (initial-symbol-table)
   (cons (map car builtins) '()))

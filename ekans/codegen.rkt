@@ -8,7 +8,6 @@
 (require "symbols.rkt")
 
 (provide generate-all-code)
-(provide generate-file)
 
 ;
 ; Turn this on to show the symbol tables as comments in the generated code
@@ -115,6 +114,8 @@
      (string-append
       (cond
         [(equal? char-value #\newline) (format "  create_char_value('\\n', &v~a);\n" variable-id)]
+        [(equal? char-value #\') (format "  create_char_value('\\'', &v~a);\n" variable-id)]
+        [(equal? char-value #\\) (format "  create_char_value('\\\\', &v~a);\n" variable-id)]
         [else (format "  create_char_value('~a', &v~a);\n" char-value variable-id)])
       (optional-collect))
      variable-id
@@ -275,10 +276,6 @@
 (define (generate-list-statement list-statement context)
   (let* ([list-statement-list (cdr list-statement)])
     (cond
-      [(null? list-statement-list)
-       (begin
-         (displayln (format "[log] Error: List statement is empty: ~a" list-statement))
-         (exit 2))]
       [(and (equal? (caar list-statement-list) 'symbol-statement)
             (equal? (cdar list-statement-list) "lambda"))
        (generate-lambda list-statement-list context)]
@@ -428,28 +425,11 @@
          [quoted-statement-type (car quoted-statement)])
     (cond
       [(eq? quoted-statement-type 'number-statement)
-       (list (string-append
-              (format "  create_number_value(~a, &v~a);\n" (cdr quoted-statement) variable-id)
-              (optional-collect))
-             variable-id
-             context)]
-      [(eq? quoted-statement-type 'bool-statement)
-       (list (string-append (format "  create_boolean_value(~a, &v~a);\n"
-                                    (if (cdr quoted-statement) "true" "false")
-                                    variable-id)
-                            (optional-collect))
-             variable-id
-             context)]
-      [(eq? quoted-statement-type 'char-statement)
-       (list
-        (string-append
-         (cond
-           [(equal? (cdr quoted-statement) #\newline)
-            (format "  create_char_value('\\n', &v~a);\n" variable-id)]
-           [else (format "  create_char_value('~a', &v~a);\n" (cdr quoted-statement) variable-id)])
-         (optional-collect))
-        variable-id
-        context)]
+       (generate-number-statement quoted-statement context)]
+      [(eq? quoted-statement-type 'bool-statement) (generate-bool-statement quoted-statement context)]
+      [(eq? quoted-statement-type 'char-statement) (generate-char-statement quoted-statement context)]
+      [(eq? quoted-statement-type 'string-statement)
+       (generate-string-statement quoted-statement context)]
       [(eq? quoted-statement-type 'list-statement)
        (generate-list-statement-quoted quoted-statement context)]
       [(eq? quoted-statement-type 'symbol-statement)
@@ -574,7 +554,7 @@
                    [generate-statements-rest (cdr generate-statements-result)]
                    [generate-statements-result
                     (cons (string-append
-                           (optional-comment (format "/* Adding defines here:\n~a*/\n"
+                           (optional-comment (format "// Adding defines here:\n~a"
                                                      (pretty-symbol-table (symbol-table context))))
                            (format "  create_environment(env, ~a, &v~a);\n  env = v~a;\n"
                                    (length define-names)
@@ -661,7 +641,7 @@
 (define (pretty-symbol-table table)
   (if (null? table)
       ""
-      (format "~a\n~a" (car table) (pretty-symbol-table (cdr table)))))
+      (format "// ~a\n~a" (car table) (pretty-symbol-table (cdr table)))))
 
 ;
 ; This function generates the code for a single function.
@@ -675,21 +655,21 @@
          [statements-variable (cadr statements-result)]
          [context (caddr statements-result)]
          [number-of-variables (number-of-variables context)])
-    (cons
-     (string-append (optional-comment (format "/*\nThe symbol table for this function is:\n~a\n"
-                                              (pretty-symbol-table (symbol-table original-context))))
-                    (optional-comment (format "The body for this function is:\n~a\n*/\n" statements))
-                    (format "void f~a(ekans_value* env, ekans_value** pReturn) " function-id)
-                    lb
-                    "\n"
-                    (generate-temp-declarations number-of-variables)
-                    statements-code
-                    (format "  *pReturn = v~a;\n" statements-variable)
-                    (format "  pop_stack_slot(~a);\n" number-of-variables)
-                    (generate-collect-statement)
-                    rb
-                    "\n")
-     context)))
+    (cons (string-append
+           (optional-comment (format "// The symbol table for this function is:\n~a\n"
+                                     (pretty-symbol-table (symbol-table original-context))))
+           ; (optional-comment (format "// The body for this function is:\n//~a\n\n" statements))
+           (format "void f~a(ekans_value* env, ekans_value** pReturn) " function-id)
+           lb
+           "\n"
+           (generate-temp-declarations number-of-variables)
+           statements-code
+           (format "  *pReturn = v~a;\n" statements-variable)
+           (format "  pop_stack_slot(~a);\n" number-of-variables)
+           (generate-collect-statement)
+           rb
+           "\n")
+          context)))
 
 (define (define? statement)
   (and ;
@@ -773,7 +753,7 @@
                  (string-append "int main(int argc, char** argv) "
                                 lb
                                 "\n"
-                                "  initialize_ekans();\n"
+                                "  initialize_ekans(argc, argv);\n"
                                 "  ekans_value* env = NULL;\n"
                                 "  push_stack_slot(&env);\n"
                                 "  ekans_value* v1 = NULL;\n"
@@ -786,9 +766,3 @@
                                 "  return 0;\n"
                                 rb
                                 "\n")))
-
-;
-; Save the output to a file
-;
-(define (generate-file filename generated-code)
-  (with-output-to-file filename (lambda () (write-string generated-code)) #:exists 'replace))

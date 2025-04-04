@@ -6,7 +6,7 @@
 #include <ekans.h>
 
 void test_initialize_ekans() {
-  initialize_ekans();
+  initialize_ekans(0, NULL);
   {
     assert(head.next == &tail);
     assert(tail.prev == &head);
@@ -16,7 +16,7 @@ void test_initialize_ekans() {
 }
 
 void test_create_number_value() {
-  initialize_ekans();
+  initialize_ekans(0, NULL);
   {
     ekans_value* v = NULL;
     create_number_value(20250312, &v);
@@ -32,7 +32,7 @@ void test_create_number_value() {
 }
 
 void test_create_boolean_value() {
-  initialize_ekans();
+  initialize_ekans(0, NULL);
   {
     ekans_value* v = NULL;
     create_boolean_value(true, &v);
@@ -48,7 +48,7 @@ void test_create_boolean_value() {
 }
 
 void test_create_nil_value() {
-  initialize_ekans();
+  initialize_ekans(0, NULL);
   {
     ekans_value* v = NULL;
     create_nil_value(&v);
@@ -63,7 +63,7 @@ void test_create_nil_value() {
 }
 
 void test_create_cons_value() {
-  initialize_ekans();
+  initialize_ekans(0, NULL);
   {
     ekans_value* a = NULL;
     ekans_value* b = NULL;
@@ -94,7 +94,7 @@ void test_create_cons_value() {
 }
 
 void test_create_char_value() {
-  initialize_ekans();
+  initialize_ekans(0, NULL);
   {
     ekans_value* v = NULL;
     create_char_value('c', &v);
@@ -110,7 +110,7 @@ void test_create_char_value() {
 }
 
 void test_create_newline_value() {
-  initialize_ekans();
+  initialize_ekans(0, NULL);
   {
     ekans_value* v = NULL;
     create_char_value('\n', &v);
@@ -126,7 +126,7 @@ void test_create_newline_value() {
 }
 
 void test_create_string_value() {
-  initialize_ekans();
+  initialize_ekans(0, NULL);
   {
     ekans_value* v = NULL;
     create_string_value("Cecilia", &v);
@@ -142,7 +142,7 @@ void test_create_string_value() {
 }
 
 void test_addition(void) {
-  initialize_ekans();
+  initialize_ekans(0, NULL);
 
   ekans_value* global_environment = NULL;
   ekans_value* plus_closure       = NULL;

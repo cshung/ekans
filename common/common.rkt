@@ -11,10 +11,10 @@
 (define rs #\])
 (define empty-string "")
 
-(provide lp
-         lb
-         rp
-         rb
-         ls
-         rs
-         empty-string)
+(provide lp)
+(provide lb)
+(provide rp)
+(provide rb)
+(provide ls)
+(provide rs)
+(provide empty-string)

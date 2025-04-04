@@ -13,12 +13,25 @@
 (define (take-while input condition)
   (if (null? input)
       (cons '() '())
-      (let ([head (car input)]
-            [tail (cdr input)])
-        (if (condition head)
-            (let ([tail-result (take-while tail condition)])
-              (cons (cons head (car tail-result)) (cdr tail-result)))
-            (cons '() input)))))
+      (let ([decision (condition input)])
+        (cond
+          [(equal? decision 'keep-going)
+           (let* ([result (take-while (cdr input) condition)]
+                  [result-value (car result)]
+                  [result-tail (cdr result)])
+             (cons (cons (car input) result-value) result-tail))]
+          [(equal? decision 'drop-and-stop) (cons '() input)]
+          [(equal? decision 'take-and-stop) (cons (cons (car input) '()) (cdr input))]
+          [else (error "Unknown decision" decision)]))))
+
+(define (digit-decision input)
+  (if (digit? (car input)) 'keep-going 'drop-and-stop))
+
+(define (symbol-decision input)
+  (if (token-end? input) 'drop-and-stop 'keep-going))
+
+(define (string-decision input)
+  (if (and (not (equal? (car input) #\\)) (equal? (cadr input) #\")) 'take-and-stop 'keep-going))
 
 (define (digits-to-number lst acc)
   (if (null? lst)
@@ -119,20 +132,20 @@
                    [else (cons (cons 'unknown '()) '())])]
                 ; Number
                 [(digit? peek)
-                 (let ([number-result (take-while input digit?)])
+                 (let ([number-result (take-while input digit-decision)])
                    (if (token-end? (cdr number-result))
                        (cons (cons 'number (digits-to-number (car number-result) 0))
                              (cdr number-result))
                        (cons (cons 'unknown '()) '())))]
                 ; String
                 [(equal? peek #\")
-                 (let ([string-result (take-while (cdr input) (lambda (c) (not (equal? c #\"))))])
+                 (let ([string-result (take-while input string-decision)])
                    (if (token-end? (cddr string-result))
-                       (cons (cons 'string (list->string (car string-result))) (cddr string-result))
+                       (cons (cons 'string (list->string (cdar string-result))) (cddr string-result))
                        (cons (cons 'unknown '()) '())))]
                 ; Symbol
                 [else
-                 (let* ([symbol-result (take-while input (lambda (c) (not (token-end? (list c)))))]
+                 (let* ([symbol-result (take-while input symbol-decision)]
                         [symbol (car symbol-result)]
                         [symbol-value (list->string symbol)]
                         [tail (cdr symbol-result)])
