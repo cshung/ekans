@@ -96,6 +96,8 @@ test-execution: ./build/compiler.out build/ekans.o
 	done
 
 build/debug.c: build/compiler.out test/data/debug.rkt
+	rm -f ./test/data/debug.rkt
+	sh ./gen.sh
 	./build/compiler.out ./test/data/debug.rkt ./build/debug.c
 
 build/debug.out: build/debug.c build/ekans.o

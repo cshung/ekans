@@ -16,6 +16,7 @@ typedef enum {
 } bool;
 
 typedef struct ekans_value ekans_value;
+typedef struct buffer      buffer;
 
 typedef void (*ekans_function)(ekans_value*, ekans_value**);
 
@@ -97,9 +98,45 @@ void failfast(ekans_value* environment, ekans_value** pReturn);
 
 void is_pair(ekans_value* environment, ekans_value** pReturn);
 
+// Begin TODO
+
+void list_to_string(ekans_value* environment, ekans_value** pReturn);
+
+void string_append(ekans_value* environment, ekans_value** pReturn);
+
+void format(ekans_value* environment, ekans_value** pReturn);
+
+void cadr(ekans_value* environment, ekans_value** pReturn);
+
+void caddr(ekans_value* environment, ekans_value** pReturn);
+
+void cddr(ekans_value* environment, ekans_value** pReturn);
+
+void cddadr(ekans_value* environment, ekans_value** pReturn);
+
+void cdadr(ekans_value* environment, ekans_value** pReturn);
+
+void caadr(ekans_value* environment, ekans_value** pReturn);
+
+void caar(ekans_value* environment, ekans_value** pReturn);
+
+void cdar(ekans_value* environment, ekans_value** pReturn);
+
+void cdddr(ekans_value* environment, ekans_value** pReturn);
+
+void cadddr(ekans_value* environment, ekans_value** pReturn);
+
+void write_file(ekans_value* environment, ekans_value** pReturn);
+
+void read_file(ekans_value* environment, ekans_value** pReturn);
+
+// End TODO
+
 // primitive functions (called by compiler only)
 
 bool is_true(ekans_value* v);
+
+void ekans_value_to_string(ekans_value* v, buffer* b);
 
 void print_ekans_value(ekans_value* v);
 

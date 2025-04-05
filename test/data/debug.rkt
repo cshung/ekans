@@ -1203,21 +1203,21 @@
                  ;
                  ; Begin TODO
                  ;
-                 ("list->string" "char_to_int")
-                 ("string-append" "char_to_int")
-                 ("format" "char_to_int")
-                 ("cadr" "char_to_int")
-                 ("caddr" "char_to_int")
-                 ("cddr" "char_to_int")
-                 ("cddadr" "char_to_int")
-                 ("cdadr" "char_to_int")
-                 ("caadr" "char_to_int")
-                 ("caar" "char_to_int")
-                 ("cdar" "char_to_int")
-                 ("cdddr" "char_to_int")
-                 ("cadddr" "char_to_int")
-                 ("write-file" "char_to_int")
-                 ("read-file" "char_to_int")
+                 ("list->string" "list_to_string")
+                 ("string-append" "string_append")
+                 ("format" "format")
+                 ("cadr" "cadr")
+                 ("caddr" "caddr")
+                 ("cddr" "cddr")
+                 ("cddadr" "cddadr")
+                 ("cdadr" "cdadr")
+                 ("caadr" "caadr")
+                 ("caar" "caar")
+                 ("cdar" "cdar")
+                 ("cdddr" "cdddr")
+                 ("cadddr" "cadddr")
+                 ("write-file" "write_file")
+                 ("read-file" "read_file")
                  ;
                  ; End TODO
                  ;

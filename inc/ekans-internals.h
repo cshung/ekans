@@ -59,6 +59,24 @@ typedef struct stack_slot {
   struct stack_slot* next;
 } stack_slot;
 
+typedef struct buffer {
+  char* begin;
+  char* end;
+  int   capacity;
+} buffer;
+
+void allocate_buffer(buffer* buff);
+
+void deallocate_buffer(buffer* buff);
+
+void append_bool(buffer* buff, bool b);
+
+void append_int(buffer* buff, int n);
+
+void append_char(buffer* buff, char c);
+
+void append_string(buffer* buff, const char* str);
+
 extern stack_slot* g_stack_slots;
 
 void print_ekans_value_helper(ekans_value* v);

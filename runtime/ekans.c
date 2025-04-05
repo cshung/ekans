@@ -271,6 +271,52 @@ bool is(ekans_value* obj, ekans_type type) {
   return ((obj->type | EKANS_MARK_BITS) == (type | EKANS_MARK_BITS));
 }
 
+void ekans_value_to_string(ekans_value* v, buffer* b) {
+  switch (v->type) {
+    case number: {
+      append_int(b, v->value.n);
+    } break;
+    case boolean: {
+      append_bool(b, v->value.b);
+    } break;
+    case character: {
+      append_char(b, v->value.a);
+    } break;
+    case symbol: {
+      append_string(b, v->value.s);
+    } break;
+    case string: {
+      append_string(b, v->value.s);
+    } break;
+    case cons: {
+      append_string(b, "(");
+      while (true) {
+        ekans_value_to_string(v->value.l.head, b);
+        v = v->value.l.tail;
+        if (v->type == nil) {
+          append_string(b, ")");
+          break;
+        } else if (v->type == cons) {
+          append_string(b, " ");
+        } else {
+          append_string(b, " . ");
+          ekans_value_to_string(v, b);
+          append_string(b, ")");
+          break;
+        }
+      }
+      break;
+    }
+    case nil: {
+      append_string(b, "()");
+      break;
+    }
+    default: {
+      assert(!"[ekans_value_to_string][error]: unsupported type");
+    } break;
+  }
+}
+
 void print_ekans_value(ekans_value* v) {
   print_ekans_value_helper(v);
   printf("\n");
@@ -709,6 +755,356 @@ void member(ekans_value* environment, ekans_value** pReturn) {
   create_boolean_value(false, pReturn); // target is not in the list
 }
 
+// Begin TODO
+
+void list_to_string(ekans_value* environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count != 1) {
+    fprintf(stderr, "[%s] error: requires exactly one arguments\n", __PRETTY_FUNCTION__);
+    exit(1);
+  }
+
+  assert(environment->value.e.bindings[0] != NULL);
+
+  if (environment->value.e.bindings[0]->type != cons) {
+    fprintf(stderr, "[%s] error: requires 1st argument to be a pair\n", __PRETTY_FUNCTION__);
+    exit(1);
+  }
+
+  buffer buff;
+  allocate_buffer(&buff);
+  ekans_value* list = environment->value.e.bindings[0];
+  while (list->type == cons) {
+    ekans_value_to_string(list->value.l.head, &buff);
+    list = list->value.l.tail;
+    if (list->type == nil) {
+      break;
+    } else if (list->type != cons) {
+      fprintf(stderr, "[%s][error]: the list must end with a nil type\n", __PRETTY_FUNCTION__);
+      exit(1);
+    }
+    append_string(&buff, " ");
+  }
+  create_string_value(buff.begin, pReturn);
+  deallocate_buffer(&buff);
+}
+
+void string_append(ekans_value* environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count != 2) {
+    fprintf(stderr, "[%s] error: requires exactly two arguments\n", __PRETTY_FUNCTION__);
+    exit(1);
+  }
+
+  assert(environment->value.e.bindings[0] != NULL);
+  assert(environment->value.e.bindings[1] != NULL);
+
+  if (environment->value.e.bindings[0]->type != string) {
+    fprintf(stderr, "[%s] error: requires 1st argument to be a string\n", __PRETTY_FUNCTION__);
+    exit(1);
+  }
+  if (environment->value.e.bindings[1]->type != string) {
+    fprintf(stderr, "[%s] error: requires 2nd argument to be a string\n", __PRETTY_FUNCTION__);
+    exit(1);
+  }
+
+  char* str = brutal_malloc(strlen(environment->value.e.bindings[0]->value.s) +
+                            strlen(environment->value.e.bindings[1]->value.s) + 1);
+  strcpy(str, environment->value.e.bindings[0]->value.s);
+  strcat(str, environment->value.e.bindings[1]->value.s);
+
+  create_string_value(str, pReturn);
+  brutal_free(str);
+}
+
+void format(ekans_value* environment, ekans_value** pReturn) {
+  buffer buff;
+  allocate_buffer(&buff);
+  {
+    // Example:
+    // fmt_str = "Hello ~a and ~a"
+    // environment->value.e.binding_count = 3
+    // environment->value.e.bindings[0]->value.s = "Hello ~a and ~a"
+    // environment->value.e.bindings[1]->value.s = "Alice"
+    // environment->value.e.bindings[2]->value.s = "Bob"
+    // Result: "Hello Alice and Bob"
+    const char* fmt_str = environment->value.e.bindings[0]->value.s;
+    int         arg_idx = 1; // start with the first argument after the format string
+
+    for (const char* c = fmt_str; c != NULL && *c != '\0'; ++c) {
+      if (*c == '~' && *(c + 1) == 'a') {
+        if (arg_idx >= environment->value.e.binding_count) {
+          fprintf(stderr, "[%s] arguments index error !!! \n", __PRETTY_FUNCTION__);
+          exit(1);
+        }
+        ekans_value* arg = environment->value.e.bindings[arg_idx++];
+        append_string(&buff, arg->value.s);
+        ++c; // skip 'a', e.g. fmt_str = "Hello ~a and ~a"
+      } else {
+        append_char(&buff, *c);
+      }
+    }
+    create_string_value(buff.begin, pReturn);
+  }
+  deallocate_buffer(&buff);
+}
+
+// cadr = car(cdr(list))
+void cadr(ekans_value* environment, ekans_value** pReturn) {
+  ekans_value* cdr_result = NULL;
+  cdr(environment, &cdr_result);
+
+  ekans_value* cadr_env = NULL;
+  create_environment(NULL, 1, &cadr_env);
+  set_environment(cadr_env, 0, cdr_result);
+
+  car(cadr_env, pReturn);
+}
+
+// caddr = car(cdr(cdr(list))) = cadr(cdr(list))
+void caddr(ekans_value* environment, ekans_value** pReturn) {
+  ekans_value* cdr_result = NULL;
+  cdr(environment, &cdr_result);
+
+  ekans_value* cdr_env = NULL;
+  create_environment(NULL, 1, &cdr_env);
+  set_environment(cdr_env, 0, cdr_result);
+
+  cadr(cdr_env, pReturn);
+}
+
+// cddr = cdr(cdr(list))
+void cddr(ekans_value* environment, ekans_value** pReturn) {
+  ekans_value* cdr_result = NULL;
+  cdr(environment, &cdr_result);
+
+  ekans_value* cdr_env = NULL;
+  create_environment(NULL, 1, &cdr_env);
+  set_environment(cdr_env, 0, cdr_result);
+
+  cdr(cdr_env, pReturn);
+}
+
+// cddadr = cdr(cdr(car(cdr(list)))) = cdr(cdr(cadr(list)))
+//
+// > (cddadr '(1 (2 3 4)))
+// '(4)
+void cddadr(ekans_value* environment, ekans_value** pReturn) {
+  ekans_value* cadr_result = NULL;
+  ekans_value* cdr_env1    = NULL;
+  ekans_value* cdr_result  = NULL;
+  ekans_value* cdr_env2    = NULL;
+
+  cadr(environment, &cadr_result);
+
+  create_environment(NULL, 1, &cdr_env1);
+  set_environment(cdr_env1, 0, cadr_result);
+
+  cdr(cdr_env1, &cdr_result);
+
+  create_environment(NULL, 1, &cdr_env2);
+  set_environment(cdr_env2, 0, cdr_result);
+
+  cdr(cdr_env2, pReturn);
+}
+
+// cdadr = cdr(car(cdr(list))) = cdr(cadr(list))
+// > (cdadr '(1 (2 3 4)))
+// '(3 4)
+void cdadr(ekans_value* environment, ekans_value** pReturn) {
+  ekans_value* cadr_result = NULL;
+  ekans_value* cadr_env    = NULL;
+  create_environment(NULL, 1, &cadr_env);
+  set_environment(cadr_env, 0, environment->value.e.bindings[0]);
+
+  cadr(cadr_env, &cadr_result);
+
+  ekans_value* cdr_env = NULL;
+  create_environment(NULL, 1, &cdr_env);
+  set_environment(cdr_env, 0, cadr_result);
+
+  cdr(cdr_env, pReturn);
+}
+
+// caadr = car(cdr(car(list))) = car(cadr(list))
+//
+// > (caadr '(1 (2 3 4)))
+// 2
+// > (car (cadr '(1 (2 3 4))))
+// 2
+void caadr(ekans_value* environment, ekans_value** pReturn) {
+  ekans_value* cadr_result = NULL;
+  ekans_value* cdr_env     = NULL;
+  create_environment(NULL, 1, &cdr_env);
+  set_environment(cdr_env, 0, environment->value.e.bindings[0]);
+
+  cadr(cdr_env, &cadr_result);
+
+  ekans_value* car_env = NULL;
+  create_environment(NULL, 1, &car_env);
+  set_environment(car_env, 0, cadr_result);
+
+  car(car_env, pReturn);
+}
+
+// caar
+//
+// > (caar '((2 3) 4))
+// 2
+// > (car (car '((2 3) 4)))
+// 2
+void caar(ekans_value* environment, ekans_value** pReturn) {
+  ekans_value* car_result = NULL;
+  ekans_value* car_env    = NULL;
+  ekans_value* car_env2   = NULL;
+
+  create_environment(NULL, 1, &car_env);
+  set_environment(car_env, 0, environment->value.e.bindings[0]);
+
+  car(car_env, &car_result);
+
+  create_environment(NULL, 1, &car_env2);
+  set_environment(car_env2, 0, car_result);
+
+  car(car_env2, pReturn);
+}
+
+// cdar = cdr(car(list))
+//
+// > (cdar '((2 3) 4))
+// '(3)
+// > (cdr (car '((2 3) 4)))
+// '(3)
+void cdar(ekans_value* environment, ekans_value** pReturn) {
+  ekans_value* car_result = NULL;
+  ekans_value* car_env    = NULL;
+  ekans_value* cdr_env    = NULL;
+
+  create_environment(NULL, 1, &car_env);
+  set_environment(car_env, 0, environment->value.e.bindings[0]);
+
+  car(car_env, &car_result);
+
+  create_environment(NULL, 1, &cdr_env);
+  set_environment(cdr_env, 0, car_result);
+
+  cdr(cdr_env, pReturn);
+}
+
+// cdddr = cdr(cdr(cdr(list)))
+//
+// > (cdddr '(1 2 3 4))
+// '(4)
+// > (cdr (cdr (cdr '(1 2 3 4))))
+// '(4)
+void cdddr(ekans_value* environment, ekans_value** pReturn) {
+  ekans_value* cdr_env1    = NULL;
+  ekans_value* cdr_env2    = NULL;
+  ekans_value* cdr_env3    = NULL;
+  ekans_value* cdr_result1 = NULL;
+  ekans_value* cdr_result2 = NULL;
+
+  create_environment(NULL, 1, &cdr_env1);
+  set_environment(cdr_env1, 0, environment->value.e.bindings[0]);
+  cdr(cdr_env1, &cdr_result1);
+
+  create_environment(NULL, 1, &cdr_env2);
+  set_environment(cdr_env2, 0, cdr_result1);
+  cdr(cdr_env2, &cdr_result2);
+
+  create_environment(NULL, 1, &cdr_env3);
+  set_environment(cdr_env3, 0, cdr_result2);
+  cdr(cdr_env3, pReturn);
+}
+
+// cadddr = car(cdddr(list))
+//
+// > (cadddr '(1 2 3 4))
+// 4
+// > (car (cdddr '(1 2 3 4)))
+// 4
+// >
+void cadddr(ekans_value* environment, ekans_value** pReturn) {
+  ekans_value* cdddr_result = NULL;
+  ekans_value* cdddr_env    = NULL;
+  ekans_value* car_env      = NULL;
+
+  create_environment(NULL, 1, &cdddr_env);
+  set_environment(cdddr_env, 0, environment->value.e.bindings[0]);
+  cdddr(cdddr_env, &cdddr_result);
+
+  create_environment(NULL, 1, &car_env);
+  set_environment(car_env, 0, cdddr_result);
+  car(car_env, pReturn);
+}
+
+void write_file(ekans_value* environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count != 2) {
+    fprintf(stderr, "[%s] error: requires exactly two arguments\n", __PRETTY_FUNCTION__);
+    exit(1);
+  }
+
+  assert(environment->value.e.bindings[0] != NULL);
+  assert(environment->value.e.bindings[1] != NULL);
+
+  if (environment->value.e.bindings[0]->type != string) {
+    fprintf(stderr, "[%s] error: requires 1st argument to be a string\n", __PRETTY_FUNCTION__);
+    exit(1);
+  }
+  if (environment->value.e.bindings[1]->type != string) {
+    fprintf(stderr, "[%s] error: requires 2nd argument to be a string\n", __PRETTY_FUNCTION__);
+    exit(1);
+  }
+
+  FILE* file = fopen(environment->value.e.bindings[0]->value.s, "w");
+  if (file == NULL) {
+    fprintf(stderr,
+            "[%s] error: failed to open file %s\n",
+            __PRETTY_FUNCTION__,
+            environment->value.e.bindings[0]->value.s);
+    exit(1);
+  }
+  fprintf(file, "%s", environment->value.e.bindings[1]->value.s);
+  fclose(file);
+
+  create_nil_value(pReturn);
+}
+
+void read_file(ekans_value* environment, ekans_value** pReturn) {
+  if (environment->value.e.binding_count != 1) {
+    fprintf(stderr, "[%s] error: requires exactly one argument\n", __PRETTY_FUNCTION__);
+    exit(1);
+  }
+
+  assert(environment->value.e.bindings[0] != NULL);
+
+  if (environment->value.e.bindings[0]->type != string) {
+    fprintf(stderr, "[%s] error: requires 1st argument to be a string\n", __PRETTY_FUNCTION__);
+    exit(1);
+  }
+
+  FILE* file = fopen(environment->value.e.bindings[0]->value.s, "r");
+  if (file == NULL) {
+    fprintf(stderr,
+            "[%s] error: failed to open file %s\n",
+            __PRETTY_FUNCTION__,
+            environment->value.e.bindings[0]->value.s);
+    exit(1);
+  }
+
+  fseek(file, 0, SEEK_END);
+  long size = ftell(file);
+  fseek(file, 0, SEEK_SET);
+
+  char* str = (char*)brutal_malloc(size + 1);
+  fread(str, 1, size, file);
+  str[size] = '\0';
+
+  fclose(file);
+  create_string_value(str, pReturn);
+  brutal_free(str);
+}
+
+// End TODO
+
 // Allocation helpers - just quit the process whenever an error happens
 
 void* brutal_malloc(size_t size) {
@@ -734,4 +1130,68 @@ void* brutal_calloc(size_t count, size_t size) {
 void brutal_free(void* ptr) {
   // fprintf(stderr, "free %p\n", ptr);
   free(ptr);
+}
+
+/* buffer */
+
+void allocate_buffer(buffer* buff) {
+  buff->begin    = (char*)brutal_malloc(1024);
+  buff->end      = buff->begin;
+  buff->capacity = 1024;
+  buff->begin[0] = '\0';
+}
+
+void deallocate_buffer(buffer* buff) {
+  brutal_free(buff->begin);
+  buff->begin    = NULL;
+  buff->end      = NULL;
+  buff->capacity = 0;
+}
+
+void append_bool(buffer* buff, bool b) {
+  if (b) {
+    append_string(buff, "#t");
+  } else {
+    append_string(buff, "#f");
+  }
+}
+
+void append_int(buffer* buff, int n) {
+  char str[32];
+  snprintf(str, sizeof(str), "%d", n);
+  append_string(buff, str);
+}
+
+void append_char(buffer* buff, char c) {
+  char str[2];
+  str[0] = c;
+  str[1] = '\0';
+  append_string(buff, str);
+}
+
+void append_string(buffer* buff, const char* str) {
+  const int len                = strlen(str);
+  const int requested_capacity = (buff->end - buff->begin) + len;
+
+  if (requested_capacity > buff->capacity) {
+    int new_capacity = buff->capacity * 2;
+    while (new_capacity < requested_capacity) {
+      new_capacity *= 2;
+    }
+
+    const int   offset    = buff->end - buff->begin;
+    char* const new_begin = (char*)brutal_malloc(new_capacity);
+    {
+      memmove(new_begin, buff->begin, offset); //
+    }
+    brutal_free(buff->begin);
+
+    buff->begin         = new_begin;
+    buff->begin[offset] = '\0';
+    buff->end           = buff->begin + offset;
+    buff->capacity      = new_capacity;
+  }
+  memcpy(buff->end, str, len);
+  buff->end += len;
+  *buff->end = '\0';
 }
