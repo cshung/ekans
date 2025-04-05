@@ -147,11 +147,13 @@ void pop_stack_slot(int count) {
 
 void collect(bool force) {
   static int count = 0;
+  const int THRESHOLD 1000000
   count += 1;
-  if (!force && count < 100) {
+  if (!force && count < THRESHOLD) {
     return;
   }
   count = 0;
+  printf("GC\n");
   mark();
   sweep();
 }
