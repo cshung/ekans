@@ -42,7 +42,7 @@ void initialize_ekans(int argc, char** argv) {
 }
 
 void finalize_ekans() {
-  collect();
+  collect(true);
 }
 
 // value creation routines
@@ -145,7 +145,13 @@ void pop_stack_slot(int count) {
   }
 }
 
-void collect() {
+void collect(bool force) {
+  static int count = 0;
+  count += 1;
+  if (!force && count < 100) {
+    return;
+  }
+  count = 0;
   mark();
   sweep();
 }

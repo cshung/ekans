@@ -73,7 +73,7 @@ void test_create_cons_value() {
     create_number_value(1, &a);
     create_nil_value(&b);
     create_cons_cell(a, b, &c);
-    collect();
+    collect(true);
     pop_stack_slot(1);
     assert(is(a, number));
     assert(is(b, nil));
@@ -175,7 +175,7 @@ void test_addition(void) {
   assert(plus_function);
 
   function_of(plus_closure)(local_environment, &result);
-  collect(); // we should be able to put the collect call between every line, and it should still be correct
+  collect(true); // we should be able to put the collect call between every line, and it should still be correct
   assert(result->value.n == 3);
 
   pop_stack_slot(7);

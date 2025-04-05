@@ -60,7 +60,7 @@
 ; This function generate a call to the collect function.
 ;
 (define (generate-collect-statement)
-  "  collect();\n")
+  "  collect(false);\n")
 
 ;
 ; These functions generate the code for different types of statements.

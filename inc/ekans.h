@@ -142,7 +142,7 @@ void push_stack_slot(ekans_value** slot);
 
 void pop_stack_slot(int count);
 
-void collect();
+void collect(bool force);
 
 // life cycle management
 
