@@ -130,3 +130,9 @@ build/debug.txt: build/debug.out
 clean:
 	@echo "Cleaning up build files..."
 	rm -rf build
+
+perf: build/debug.out
+	sudo perf record -g ./build/debug.out ./test/data/debug.rkt ./build/debug.c
+
+perf-report:
+	sudo perf report

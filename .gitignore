@@ -26,3 +26,7 @@ build/
 
 # Files
 *.swp
+
+# Perf
+perf.data.old
+perf.data
