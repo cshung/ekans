@@ -67,6 +67,16 @@
       "problemMatcher": []
     },
     {
+      "label": "make test-debug",
+      "type": "shell",
+      "command": "make test-debug",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "make test-all",
       "type": "shell",
       "command": "make test-all",

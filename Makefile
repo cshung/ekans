@@ -113,6 +113,9 @@ test-self-hosting: ./build/debug.out build/ekans.o
 		fi;                                                                               \
 	done
 
+test-debug: build/debug.out
+	./build/debug.out ./test/data/debug.rkt ./build/debug.c
+
 build/debug.c: build/compiler.out test/data/debug.rkt
 	rm -f ./test/data/debug.rkt
 	sh ./gen.sh
