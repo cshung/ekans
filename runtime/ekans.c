@@ -757,8 +757,6 @@ void member(ekans_value* environment, ekans_value** pReturn) {
   create_boolean_value(false, pReturn); // target is not in the list
 }
 
-// Begin TODO
-
 void list_to_string(ekans_value* environment, ekans_value** pReturn) {
   if (environment->value.e.binding_count != 1) {
     fprintf(stderr, "[%s] error: requires exactly one arguments\n", __PRETTY_FUNCTION__);
@@ -766,6 +764,11 @@ void list_to_string(ekans_value* environment, ekans_value** pReturn) {
   }
 
   assert(environment->value.e.bindings[0] != NULL);
+
+  if (environment->value.e.bindings[0]->type == nil) {
+    create_string_value("", pReturn);
+    return;
+  }
 
   if (environment->value.e.bindings[0]->type != cons) {
     fprintf(stderr, "[%s] error: requires 1st argument to be a pair\n", __PRETTY_FUNCTION__);
@@ -1091,8 +1094,6 @@ void read_file(ekans_value* environment, ekans_value** pReturn) {
   create_string_value(str, pReturn);
   brutal_free(str);
 }
-
-// End TODO
 
 // Allocation helpers - just quit the process whenever an error happens
 

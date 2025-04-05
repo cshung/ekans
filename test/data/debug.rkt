@@ -1,12 +1,6 @@
 ; Copyright (c) 2025 Good Night, Good Morning and contributors (see Contributors.md)
 ; Licensed under the MIT License. See the LICENSE file in the project root for details.
 
-
-
-
-
-
-
 (define library
   "(define (map f lst) (if (null? lst) '() (cons (f (car lst)) (map f (cdr lst))))) (define (length lst) (if (null? lst) 0 (+ 1 (length (cdr lst)))))(define args (get-args))(define (filter pred lst)(cond[(null? lst) '()][(pred (car lst)) (cons (car lst) (filter pred (cdr lst)))][else (filter pred (cdr lst))]))(define (append lst1 lst2)(if (null? lst1)lst2(cons (car lst1) (append (cdr lst1) lst2))))(define (reverse lst)(define (helper lst acc)(if (null? lst)acc(helper (cdr lst) (cons (car lst) acc))))(helper lst '()))")
 
@@ -23,13 +17,9 @@
       (displayln "Usage: ./compiler.out input.rkt output.c")
       (compiler (car args) (cadr args))))
 
-
-
 (main)
 ; Copyright (c) 2025 Good Night, Good Morning and contributors (see Contributors.md)
 ; Licensed under the MIT License. See the LICENSE file in the project root for details.
-
-
 
 (define lp #\()
 (define rp #\))
@@ -39,23 +29,8 @@
 (define rs #\])
 (define empty-string "")
 
-
-
-
-
-
-
-
 ; Copyright (c) 2025 Good Night, Good Morning and contributors (see Contributors.md)
 ; Licensed under the MIT License. See the LICENSE file in the project root for details.
-
-
-
-
-
-
-
-
 
 ;
 ; Turn this on to show the symbol tables as comments in the generated code
@@ -817,19 +792,6 @@
 ; Copyright (c) 2025 Good Night, Good Morning and contributors (see Contributors.md)
 ; Licensed under the MIT License. See the LICENSE file in the project root for details.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 (define (new-variable-id context)
   (+ (car context) 1))
 
@@ -868,12 +830,6 @@
   (cadddr context))
 ; Copyright (c) 2025 Good Night, Good Morning and contributors (see Contributors.md)
 ; Licensed under the MIT License. See the LICENSE file in the project root for details.
-
-
-
-
-
-
 
 (define (digit? c)
   (and (char>=? c #\0) (char<=? c #\9)))
@@ -1024,13 +980,6 @@
 ; Copyright (c) 2025 Good Night, Good Morning and contributors (see Contributors.md)
 ; Licensed under the MIT License. See the LICENSE file in the project root for details.
 
-
-
-
-
-
-
-
 ;
 ; Grammar
 ;
@@ -1169,13 +1118,6 @@
 ; Copyright (c) 2025 Good Night, Good Morning and contributors (see Contributors.md)
 ; Licensed under the MIT License. See the LICENSE file in the project root for details.
 
-
-
-
-
-
-
-
 (define builtins
   '(("+" "plus") ("-" "subtract")
                  ("*" "multiply")
@@ -1214,8 +1156,7 @@
                  ("cdddr" "cdddr")
                  ("cadddr" "cadddr")
                  ("write-file" "write_file")
-                 ("read-file" "read_file")
-                 ))
+                 ("read-file" "read_file")))
 
 (define (initial-symbol-table)
   (cons (map car builtins) '()))

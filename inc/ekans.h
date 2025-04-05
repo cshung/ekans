@@ -98,8 +98,6 @@ void failfast(ekans_value* environment, ekans_value** pReturn);
 
 void is_pair(ekans_value* environment, ekans_value** pReturn);
 
-// Begin TODO
-
 void list_to_string(ekans_value* environment, ekans_value** pReturn);
 
 void string_append(ekans_value* environment, ekans_value** pReturn);
@@ -129,8 +127,6 @@ void cadddr(ekans_value* environment, ekans_value** pReturn);
 void write_file(ekans_value* environment, ekans_value** pReturn);
 
 void read_file(ekans_value* environment, ekans_value** pReturn);
-
-// End TODO
 
 // primitive functions (called by compiler only)
 

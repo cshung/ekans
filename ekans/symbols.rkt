@@ -32,9 +32,6 @@
                  (">" "greater")
                  ("error" "failfast")
                  ("pair?" "is_pair")
-                 ;
-                 ; Begin TODO
-                 ;
                  ("list->string" "list_to_string")
                  ("string-append" "string_append")
                  ("format" "format")
@@ -49,11 +46,7 @@
                  ("cdddr" "cdddr")
                  ("cadddr" "cadddr")
                  ("write-file" "write_file")
-                 ("read-file" "read_file")
-                 ;
-                 ; End TODO
-                 ;
-                 ))
+                 ("read-file" "read_file")))
 
 (define (initial-symbol-table)
   (cons (map car builtins) '()))
