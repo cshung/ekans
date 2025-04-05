@@ -52,7 +52,7 @@ build/test-runtime.out: build/ekans.o test/runtime/main.c
 	mkdir -p build
 	$(CC) $(INCLUDES) $(CFLAGS) -o build/test-runtime.out test/runtime/main.c build/ekans.o
 
-test-all: test-racket test-runtime test-execution test-phase-1
+test-all: test-racket test-runtime test-execution test-self-hosting
 
 test-phase-0: build/debug.c
 
@@ -84,6 +84,24 @@ test-execution: ./build/compiler.out build/ekans.o
 		if [ -f "test/data/$$file.expect" ]; then                                         \
 			rm -f ./build/output.actual;                                                    \
 			./build/compiler.out "test/data/$$file.rkt" "build/$$file.c";                   \
+			$(CC) $(INCLUDES) $(CFLAGS) -o ./build/$$file.out build/$$file.c build/ekans.o; \
+			./build/$$file.out > ./build/$$file.actual;                                     \
+			echo "Input";                                                                   \
+			cat "test/data/$$file.rkt";                                                     \
+			echo "Output";                                                                  \
+			cat ./build/$$file.actual;                                                      \
+			diff "test/data/$$file.expect" ./build/$$file.actual;                           \
+			diff -q "test/data/$$file.expect" ./build/$$file.actual >/dev/null;             \
+		fi;                                                                               \
+	done
+
+test-self-hosting: ./build/debug.out build/ekans.o
+	set -e;                                                                             \
+	for file in $$(find test/data -name '*.rkt' | sed 's/^.*\/\(.*\)\.rkt$$/\1/g'); do  \
+		printf "\ntest input file: %s\n" "test/data/$$file.rkt";                          \
+		if [ -f "test/data/$$file.expect" ]; then                                         \
+			rm -f ./build/output.actual;                                                    \
+			./build/debug.out "test/data/$$file.rkt" "build/$$file.c";                      \
 			$(CC) $(INCLUDES) $(CFLAGS) -o ./build/$$file.out build/$$file.c build/ekans.o; \
 			./build/$$file.out > ./build/$$file.actual;                                     \
 			echo "Input";                                                                   \

@@ -219,7 +219,7 @@ void test_list_to_string() {
   // printf("%s\n", result->value.s);
 
   assert(is(result, string));
-  assert(strcmp(result->value.s, "123456 gapry #t") == 0);
+  assert(strcmp(result->value.s, "123456gapry#t") == 0);
 
   pop_stack_slot(5);
   finalize_ekans();

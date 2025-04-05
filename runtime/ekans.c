@@ -644,17 +644,19 @@ void equals(ekans_value* environment, ekans_value** pReturn) {
   }
   assert(environment->value.e.bindings[0] != NULL);
   assert(environment->value.e.bindings[1] != NULL);
-  ekans_value* v1 = environment->value.e.bindings[0];
-  ekans_value* v2 = environment->value.e.bindings[1];
+  ekans_value* v1     = environment->value.e.bindings[0];
+  ekans_value* v2     = environment->value.e.bindings[1];
+  bool         result = false;
   if (v1->type != v2->type) {
-    fprintf(stderr, "Error: type mismatch encountered in equals\n");
-    exit(1);
-  }
-  bool result = false;
-  if (is(v1, number)) {
+    result = false;
+  } else if (is(v1, number)) {
     result = v1->value.n == v2->value.n;
   } else if (is(v1, character)) {
     result = v1->value.a == v2->value.a;
+  } else if (is(v1, symbol)) {
+    result = (strcmp(v1->value.s, v2->value.s) == 0);
+  } else if (is(v1, string)) {
+    result = (strcmp(v1->value.s, v2->value.s) == 0);
   } else {
     fprintf(stderr, "Error: unsupported type encountered in equals\n");
     exit(1);
@@ -705,7 +707,7 @@ void failfast(ekans_value* environment, ekans_value** pReturn) {
 
 void is_pair(ekans_value* environment, ekans_value** pReturn) {
   if (environment->value.e.binding_count != 1) {
-    fprintf(stderr, "Error: error requires exactly one arguments\n");
+    fprintf(stderr, "Error: is_pair requires exactly one arguments\n");
     exit(1);
   }
   assert(environment->value.e.bindings[0] != NULL);
@@ -782,37 +784,24 @@ void list_to_string(ekans_value* environment, ekans_value** pReturn) {
       fprintf(stderr, "[%s][error]: the list must end with a nil type\n", __PRETTY_FUNCTION__);
       exit(1);
     }
-    append_string(&buff, " ");
   }
   create_string_value(buff.begin, pReturn);
   deallocate_buffer(&buff);
 }
 
 void string_append(ekans_value* environment, ekans_value** pReturn) {
-  if (environment->value.e.binding_count != 2) {
-    fprintf(stderr, "[%s] error: requires exactly two arguments\n", __PRETTY_FUNCTION__);
-    exit(1);
+  buffer buff;
+  allocate_buffer(&buff);
+  for (int i = 0; i < environment->value.e.binding_count; i++) {
+    assert(environment->value.e.bindings[i] != NULL);
+    if (environment->value.e.bindings[i]->type != string) {
+      fprintf(stderr, "[%s] string_append: requires argument to be a string\n", __PRETTY_FUNCTION__);
+      exit(1);
+    }
+    append_string(&buff, environment->value.e.bindings[i]->value.s);
   }
-
-  assert(environment->value.e.bindings[0] != NULL);
-  assert(environment->value.e.bindings[1] != NULL);
-
-  if (environment->value.e.bindings[0]->type != string) {
-    fprintf(stderr, "[%s] error: requires 1st argument to be a string\n", __PRETTY_FUNCTION__);
-    exit(1);
-  }
-  if (environment->value.e.bindings[1]->type != string) {
-    fprintf(stderr, "[%s] error: requires 2nd argument to be a string\n", __PRETTY_FUNCTION__);
-    exit(1);
-  }
-
-  char* str = brutal_malloc(strlen(environment->value.e.bindings[0]->value.s) +
-                            strlen(environment->value.e.bindings[1]->value.s) + 1);
-  strcpy(str, environment->value.e.bindings[0]->value.s);
-  strcat(str, environment->value.e.bindings[1]->value.s);
-
-  create_string_value(str, pReturn);
-  brutal_free(str);
+  create_string_value(buff.begin, pReturn);
+  deallocate_buffer(&buff);
 }
 
 void format(ekans_value* environment, ekans_value** pReturn) {
@@ -836,7 +825,7 @@ void format(ekans_value* environment, ekans_value** pReturn) {
           exit(1);
         }
         ekans_value* arg = environment->value.e.bindings[arg_idx++];
-        append_string(&buff, arg->value.s);
+        ekans_value_to_string(arg, &buff);
         ++c; // skip 'a', e.g. fmt_str = "Hello ~a and ~a"
       } else {
         append_char(&buff, *c);
@@ -1171,7 +1160,7 @@ void append_char(buffer* buff, char c) {
 
 void append_string(buffer* buff, const char* str) {
   const int len                = strlen(str);
-  const int requested_capacity = (buff->end - buff->begin) + len;
+  const int requested_capacity = (buff->end - buff->begin) + len + 1;
 
   if (requested_capacity > buff->capacity) {
     int new_capacity = buff->capacity * 2;
