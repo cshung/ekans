@@ -10,8 +10,11 @@ compiled/
 \#*
 .\#*
 
-# Editor
+# IDE
 .idea/
+.vs/
+
+# Editor
 .vscode/*
 !.vscode/tasks.json
 
