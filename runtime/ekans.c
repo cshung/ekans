@@ -9,6 +9,12 @@
 #include <string.h>
 #include <limits.h>
 
+#ifdef _WIN32
+#define __EKANS_FUNCTION__ __FUNCSIG__
+#else
+#define __EKANS_FUNCTION__ __PRETTY_FUNCTION__
+#endif
+
 //
 // error handling principle:
 //
@@ -424,7 +430,7 @@ void multiply(ekans_value* environment, ekans_value** pReturn) {
     const int t = environment->value.e.bindings[i]->value.n;
     if (t != 0) {
       if (product > INT_MAX / t || product < INT_MIN / t) {
-        fprintf(stderr, "Error: failed to integer overflow in the function: [%s]\n", __PRETTY_FUNCTION__);
+        fprintf(stderr, "Error: failed to integer overflow in the function: [%s]\n", __EKANS_FUNCTION__);
         exit(1);
       }
     }
@@ -445,7 +451,7 @@ void division(ekans_value* environment, ekans_value** pReturn) {
 
     const int t = environment->value.e.bindings[i]->value.n;
     if (t == 0) {
-      fprintf(stderr, "Error: failed to division by zero in the function: [%s]\n", __PRETTY_FUNCTION__);
+      fprintf(stderr, "Error: failed to division by zero in the function: [%s]\n", __EKANS_FUNCTION__);
       exit(1);
     }
     quotient /= t;
@@ -758,7 +764,7 @@ void member(ekans_value* environment, ekans_value** pReturn) {
   }
 
   if (list->type != nil) {
-    fprintf(stderr, "[%s][Error]: the list must end with a nil type to be valid\n", __PRETTY_FUNCTION__);
+    fprintf(stderr, "[%s][Error]: the list must end with a nil type to be valid\n", __EKANS_FUNCTION__);
     exit(1);
   }
   create_boolean_value(false, pReturn); // target is not in the list
@@ -766,7 +772,7 @@ void member(ekans_value* environment, ekans_value** pReturn) {
 
 void list_to_string(ekans_value* environment, ekans_value** pReturn) {
   if (environment->value.e.binding_count != 1) {
-    fprintf(stderr, "[%s] error: requires exactly one arguments\n", __PRETTY_FUNCTION__);
+    fprintf(stderr, "[%s] error: requires exactly one arguments\n", __EKANS_FUNCTION__);
     exit(1);
   }
 
@@ -778,7 +784,7 @@ void list_to_string(ekans_value* environment, ekans_value** pReturn) {
   }
 
   if (environment->value.e.bindings[0]->type != cons) {
-    fprintf(stderr, "[%s] error: requires 1st argument to be a pair\n", __PRETTY_FUNCTION__);
+    fprintf(stderr, "[%s] error: requires 1st argument to be a pair\n", __EKANS_FUNCTION__);
     exit(1);
   }
 
@@ -791,7 +797,7 @@ void list_to_string(ekans_value* environment, ekans_value** pReturn) {
     if (list->type == nil) {
       break;
     } else if (list->type != cons) {
-      fprintf(stderr, "[%s][error]: the list must end with a nil type\n", __PRETTY_FUNCTION__);
+      fprintf(stderr, "[%s][error]: the list must end with a nil type\n", __EKANS_FUNCTION__);
       exit(1);
     }
   }
@@ -805,7 +811,7 @@ void string_append(ekans_value* environment, ekans_value** pReturn) {
   for (int i = 0; i < environment->value.e.binding_count; i++) {
     assert(environment->value.e.bindings[i] != NULL);
     if (environment->value.e.bindings[i]->type != string) {
-      fprintf(stderr, "[%s] string_append: requires argument to be a string\n", __PRETTY_FUNCTION__);
+      fprintf(stderr, "[%s] string_append: requires argument to be a string\n", __EKANS_FUNCTION__);
       exit(1);
     }
     append_string(&buff, environment->value.e.bindings[i]->value.s);
@@ -831,7 +837,7 @@ void format(ekans_value* environment, ekans_value** pReturn) {
     for (const char* c = fmt_str; c != NULL && *c != '\0'; ++c) {
       if (*c == '~' && *(c + 1) == 'a') {
         if (arg_idx >= environment->value.e.binding_count) {
-          fprintf(stderr, "[%s] arguments index error !!! \n", __PRETTY_FUNCTION__);
+          fprintf(stderr, "[%s] arguments index error !!! \n", __EKANS_FUNCTION__);
           exit(1);
         }
         ekans_value* arg = environment->value.e.bindings[arg_idx++];
@@ -1037,7 +1043,7 @@ void cadddr(ekans_value* environment, ekans_value** pReturn) {
 
 void write_file(ekans_value* environment, ekans_value** pReturn) {
   if (environment->value.e.binding_count != 2) {
-    fprintf(stderr, "[%s] error: requires exactly two arguments\n", __PRETTY_FUNCTION__);
+    fprintf(stderr, "[%s] error: requires exactly two arguments\n", __EKANS_FUNCTION__);
     exit(1);
   }
 
@@ -1045,11 +1051,11 @@ void write_file(ekans_value* environment, ekans_value** pReturn) {
   assert(environment->value.e.bindings[1] != NULL);
 
   if (environment->value.e.bindings[0]->type != string) {
-    fprintf(stderr, "[%s] error: requires 1st argument to be a string\n", __PRETTY_FUNCTION__);
+    fprintf(stderr, "[%s] error: requires 1st argument to be a string\n", __EKANS_FUNCTION__);
     exit(1);
   }
   if (environment->value.e.bindings[1]->type != string) {
-    fprintf(stderr, "[%s] error: requires 2nd argument to be a string\n", __PRETTY_FUNCTION__);
+    fprintf(stderr, "[%s] error: requires 2nd argument to be a string\n", __EKANS_FUNCTION__);
     exit(1);
   }
 
@@ -1057,7 +1063,7 @@ void write_file(ekans_value* environment, ekans_value** pReturn) {
   if (file == NULL) {
     fprintf(stderr,
             "[%s] error: failed to open file %s\n",
-            __PRETTY_FUNCTION__,
+            __EKANS_FUNCTION__,
             environment->value.e.bindings[0]->value.s);
     exit(1);
   }
@@ -1069,14 +1075,14 @@ void write_file(ekans_value* environment, ekans_value** pReturn) {
 
 void read_file(ekans_value* environment, ekans_value** pReturn) {
   if (environment->value.e.binding_count != 1) {
-    fprintf(stderr, "[%s] error: requires exactly one argument\n", __PRETTY_FUNCTION__);
+    fprintf(stderr, "[%s] error: requires exactly one argument\n", __EKANS_FUNCTION__);
     exit(1);
   }
 
   assert(environment->value.e.bindings[0] != NULL);
 
   if (environment->value.e.bindings[0]->type != string) {
-    fprintf(stderr, "[%s] error: requires 1st argument to be a string\n", __PRETTY_FUNCTION__);
+    fprintf(stderr, "[%s] error: requires 1st argument to be a string\n", __EKANS_FUNCTION__);
     exit(1);
   }
 
@@ -1084,7 +1090,7 @@ void read_file(ekans_value* environment, ekans_value** pReturn) {
   if (file == NULL) {
     fprintf(stderr,
             "[%s] error: failed to open file %s\n",
-            __PRETTY_FUNCTION__,
+            __EKANS_FUNCTION__,
             environment->value.e.bindings[0]->value.s);
     exit(1);
   }
