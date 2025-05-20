@@ -44,9 +44,8 @@
 ;       (match '(#\a #\b #\c)
 ;         '(#\a #\b)))
 
-(member 23 '(12 23 34))
+; (member 23 '(12 23 34))
+(define (token-end? suffix)
+  (or (null? suffix) (member (car suffix) '(#\space #\newline #\( #\) #\[ #\]))))
 
-; (define (token-end? suffix)
-;   (or (null? suffix) (member (car suffix) '(#\space #\newline #\( #\) #\[ #\]))))
-;
-; (token-end? '(#\newline #\space))
+(token-end? '(#\x #\newline #\space))

@@ -30,9 +30,10 @@
   (or (null? suffix) (member (car suffix) '(#\space #\newline #\( #\) #\[ #\]))))
 
 (define (skip-comment input)
-  (if (or (null? input) (equal? (car input) #\newline))
-      input
-      (skip-comment (cdr input))))
+  (cond
+    [(null? input) '()]
+    [(equal? (car input) #\newline) (cdr input)]
+    [else (skip-comment (cdr input))]))
 
 ;
 ; match
@@ -75,7 +76,10 @@
             (lexer-keywords input (cdr keywords))))))
 
 (define keywords
-  (list (cons (string->list "#t") (cons 'bool #t)) (cons (string->list "#f") (cons 'bool #f))))
+  (list (cons (string->list "#t") (cons 'bool #t))
+        (cons (string->list "#f") (cons 'bool #f))
+        (cons (string->list "#\\newline") (cons 'character #\newline))
+        (cons (string->list "#\\space") (cons 'character #\space))))
 
 ;
 ; lexer
@@ -108,9 +112,11 @@
                 [(equal? peek #\') (cons (cons 'quote '()) (cdr input))]
                 ; Character
                 [(and (pair? (cdr input)) (equal? peek #\#) (equal? (cadr input) #\\))
-                 (if (pair? (cddr input))
-                     (cons (cons 'character (caddr input)) (cdddr input))
-                     (cons (cons 'unknown '()) '()))]
+                 (cond
+                   ; case: alphabet
+                   [(pair? (cddr input)) (cons (cons 'character (caddr input)) (cdddr input))]
+                   ; case: unknown
+                   [else (cons (cons 'unknown '()) '())])]
                 ; Number
                 [(digit? peek)
                  (let ([number-result (take-while input digit?)])

@@ -109,6 +109,22 @@ void test_create_char_value() {
   printf("[%s] passed\n", __FUNCTION__);
 }
 
+void test_create_newline_value() {
+  initialize_ekans();
+  {
+    ekans_value* v = NULL;
+    create_char_value('\n', &v);
+    assert(is(v, character));
+    assert(v->value.a == '\n');
+    assert(head.next == v);
+    assert(v->prev == &head);
+    assert(v->next == &tail);
+    assert(tail.prev == v);
+  }
+  finalize_ekans();
+  printf("[%s] passed\n", __FUNCTION__);
+}
+
 void test_create_string_value() {
   initialize_ekans();
   {
@@ -175,6 +191,7 @@ int main() {
   test_create_nil_value();
   test_create_cons_value();
   test_create_char_value();
+  test_create_newline_value();
   test_create_string_value();
   test_addition();
   printf("=====================\n");

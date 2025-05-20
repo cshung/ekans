@@ -27,6 +27,26 @@
       "problemMatcher": []
     },
     {
+      "label": "make test-lexer",
+      "type": "shell",
+      "command": "make test-lexer",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "make test-runtime",
+      "type": "shell",
+      "command": "make test-runtime",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "make test-phase-0",
       "type": "shell",
       "command": "make test-phase-0",

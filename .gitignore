@@ -23,3 +23,6 @@ build/
 
 # Test Outputs
 *.actual
+
+# Files
+*.swp

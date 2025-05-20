@@ -62,6 +62,9 @@ test-racket: fmt
 	raco test test/test-lexer.rkt
 	raco test test/test-parser.rkt
 
+test-lexer: fmt
+	raco test test/test-lexer.rkt
+
 test-multi-files: clean build/compiler.out build/ekans.o 
 	for multi in multi_v0 multi_v1; do                                                  \
 		rm -f "test/data/$$multi/output.rkt";                                             \
@@ -77,6 +80,7 @@ test-runtime: fmt build/test-runtime.out
 test-execution: ./build/compiler.out build/ekans.o
 	set -e;                                                                             \
 	for file in $$(find test/data -name '*.rkt' | sed 's/^.*\/\(.*\)\.rkt$$/\1/g'); do  \
+		printf "\ntest input file: %s\n" "test/data/$$file.rkt";                          \
 		if [ -f "test/data/$$file.expect" ]; then                                         \
 			rm -f ./build/output.actual;                                                    \
 			./build/compiler.out "test/data/$$file.rkt" "build/$$file.c";                   \
