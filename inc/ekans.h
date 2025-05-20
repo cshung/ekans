@@ -53,6 +53,8 @@ void multiply(ekans_value* environment, ekans_value** pReturn);
 
 void division(ekans_value* environment, ekans_value** pReturn);
 
+void list_cons(ekans_value* environment, ekans_value** pReturn);
+
 void print_ekans_value(ekans_value* v);
 
 // garbage collection
