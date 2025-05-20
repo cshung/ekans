@@ -14,6 +14,7 @@
     ("*" "multiply") ; ekans_value* multiply(ekans_value* environment);
     ("/" "division") ; ekans_value* division(ekans_value* environment)
     ("cons" "list_cons") ; void list_cons(ekans_value* environment, ekans_value** pReturn);
+    ("=" "equals") ; void equals(ekans_value* environment, ekans_value** pReturn);
     ))
 
 (define (initial-symbol-table defines)

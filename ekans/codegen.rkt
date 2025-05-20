@@ -118,6 +118,46 @@
           variable-id
           context)))
 
+; if statement
+; example: (if #t 1 2)
+(define (generate-if-statement if-statement context)
+  (let* ([condition (cadr if-statement)] ; condition = #t
+         [then-body (caddr if-statement)] ; then-body = 1
+         [else-body (cadddr if-statement)] ; else-body = 2
+         [result-id (new-variable-id context)] ; result-id = v1
+         [context (increment-variable-id context)] ; context = updated-context
+         [condition-result
+          (generate-statement condition context)] ; condition-result = (code variable updated-context)
+         [condition-code
+          (car condition-result)] ; condition-code = "create_boolean_value(true, &v2);\n"
+         [condition-rest (cdr condition-result)] ; condition-rest = (v2 updated-context)
+         [condition-variable (car condition-rest)] ; condition-variable = v2
+         [context (cadr condition-rest)] ; context = updated-context
+         [then-result (generate-statement then-body context)]
+         [then-code (car then-result)] ; then-code = "create_number_value(1, &v3);\n"
+         [then-rest (cdr then-result)] ; then-rest = (v3 updated-context)
+         [then-variable (car then-rest)] ; then-variable = v3
+         [context (cadr then-rest)] ; context = updated-context
+         [else-result (generate-statement else-body
+                                          context)] ; else-result = (code variable updated-context)
+         [else-code (car else-result)] ; else-code = "create_number_value(2, &v4);\n"
+         [else-rest (cdr else-result)] ; else-rest = (v4 updated-context)
+         [else-variable (car else-rest)] ; else-variable = v4
+         [context (cadr else-rest)] ; context = updated-context
+         ) ; context = updated-context
+    ; (displayln (format "[log] then-code:\n~a" then-code))
+    ; (displayln (format "[log] else-code:\n~a" else-code))
+    (list (string-append condition-code
+                         (format "  if (is_true(v~a)) {\n" condition-variable)
+                         (format "  ~a" then-code)
+                         (format "    v~a = v~a;\n" result-id then-variable)
+                         (format "  } else {\n")
+                         (format "  ~a" else-code)
+                         (format "    v~a = v~a;\n" result-id else-variable)
+                         (format "  }\n"))
+          result-id
+          context)))
+
 ;
 ; A list statement is simply a list in the source code. It could be a function call, a lambda, and many other things
 ; that we will handle in the future.
@@ -141,6 +181,9 @@
             (equal? (cdar list-statement-list) "let*"))
        (generate-let-star list-statement-list context)]
       ; TODO, handle if,and,or
+      [(and (equal? (caar list-statement-list) 'symbol-statement)
+            (equal? (cdar list-statement-list) "if"))
+       (generate-if-statement list-statement-list context)]
       ; we cannot treat them as function - if we do, we will always evaluate all branches, which is not
       ; the way it should be
       [else (generate-application list-statement-list context)])))

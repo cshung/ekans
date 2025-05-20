@@ -61,6 +61,10 @@ void division(ekans_value* environment, ekans_value** pReturn);
 
 void list_cons(ekans_value* environment, ekans_value** pReturn);
 
+void equals(ekans_value* environment, ekans_value** pReturn);
+
+bool is_true(ekans_value* v);
+
 void print_ekans_value(ekans_value* v);
 
 // garbage collection
